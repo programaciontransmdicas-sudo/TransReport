@@ -1,0 +1,40 @@
+.conexion-tablet {
+  max-width: 620px;
+  margin: auto;
+  padding-bottom: 32px;
+}
+.conexion-tablet .formulario-habilitado {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.aviso-envio {
+  margin: 12px auto;
+  padding: 16px;
+  max-width: 900px;
+  background: #fff7e6;
+  border: 1px solid #edd8ad;
+  border-radius: 16px;
+  color: #866e41;
+}
+
+.estado-equipo {
+  font-size: 10px;
+  color: #688a76;
+  background: #eff8f2;
+  border: 1px solid #dcebe1;
+  padding: 7px 10px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.conexion-tablet details {
+  margin: 20px 0;
+  padding: 15px;
+  border: 1px solid #e9e2f2;
+  background: white;
+  border-radius: 14px;
+  font-size: 12px;
+}
+.conexion-tablet > .boton-principal {
+  margin-top: 20px;
+}

@@ -1,0 +1,328 @@
+/* La misma app aprovecha la pantalla de la tablet, sin agrandar una columna de celular. */
+.opciones-movimiento {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 22px 0;
+}
+.opcion-movimiento {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: 10px;
+  padding: 20px 16px;
+  min-height: 110px;
+  border: 1px solid #ceddf4;
+  border-radius: 14px;
+  color: #183e69;
+  background: #fff;
+}
+.opcion-movimiento strong {
+  font-size: 15px;
+}
+.opcion-movimiento small {
+  font-size: 12px;
+  color: #7d8fa6;
+  line-height: 1.6;
+}
+.nota-movimiento {
+  font-size: 13px;
+  color: #6c809a;
+  line-height: 1.7;
+}
+.formulario-vehiculo > .campo {
+  min-width: 0;
+}
+.formulario-vehiculo > .campo-amplio {
+  grid-column: 1/-1;
+}
+@media (max-width: 360px) {
+  .opciones-movimiento {
+    grid-template-columns: 1fr;
+  }
+}
+@media (min-width: 768px) {
+  .aplicacion.app-movil {
+    max-width: 1200px;
+    width: 100%;
+    font-size: 17px;
+  }
+  .app-movil .cabecera {
+    padding: 24px 36px;
+  }
+  .app-movil .cabecera h1 {
+    font-size: 26px;
+  }
+  .app-movil .cabecera p {
+    font-size: 14px;
+    margin-top: 7px;
+  }
+  .contenido-app {
+    padding: 32px 36px calc(118px + env(safe-area-inset-bottom, 0px));
+  }
+  .barra-inferior-app {
+    max-width: 1200px;
+    padding-top: 10px;
+  }
+  .barra-inferior-app button {
+    font-size: 13px;
+    min-height: 62px;
+  }
+  .barra-inferior-app .icono-app {
+    width: 26px;
+    height: 26px;
+  }
+  .app-movil h2,
+  .app-movil .control-vehiculos h2,
+  .app-movil .panel-control h2 {
+    font-size: 28px;
+  }
+  .fecha-app {
+    font-size: 13px;
+  }
+  .subtitulo-app {
+    font-size: 16px;
+  }
+  .titulo-seccion-app h3 {
+    font-size: 18px;
+  }
+  .enlace-app {
+    font-size: 14px;
+  }
+  .hero-operacion h3 {
+    font-size: 20px;
+  }
+  .hero-operacion p {
+    font-size: 15px;
+    max-width: 340px;
+  }
+  .hero-operacion button {
+    font-size: 14px;
+    min-height: 52px;
+  }
+  .metrica-app {
+    padding: 25px;
+  }
+  .metrica-app strong {
+    font-size: 36px;
+  }
+  .metrica-app span {
+    font-size: 15px;
+  }
+  .metrica-app .icono-app {
+    width: 23px;
+    height: 23px;
+  }
+  .acceso-control {
+    padding: 24px;
+    min-height: 164px;
+  }
+  .acceso-control strong {
+    font-size: 18px;
+  }
+  .acceso-control small {
+    font-size: 14px;
+  }
+  .icono-acceso {
+    height: 44px;
+    width: 44px;
+  }
+  .icono-acceso .icono-app {
+    height: 27px;
+    width: 27px;
+  }
+  .chips-controles button {
+    font-size: 15px;
+    min-height: 48px;
+  }
+  .contador-app,
+  .buscador-app label {
+    font-size: 14px;
+  }
+  .buscador-app input {
+    font-size: 17px;
+    min-height: 52px;
+  }
+  .movimiento-app {
+    padding: 24px;
+  }
+  .movimiento-app h3 {
+    font-size: 18px;
+  }
+  .movimiento-app p {
+    font-size: 15px;
+  }
+  .tipo-movimiento {
+    font-size: 14px;
+  }
+  .estado-movimiento {
+    font-size: 12px;
+  }
+  .control-vehiculos .formulario,
+  .campos-control {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 26px;
+  }
+  .control-vehiculos .formulario > section,
+  .control-vehiculos .formulario > fieldset,
+  .control-vehiculos .formulario > button,
+  .control-vehiculos .formulario > .mensaje-error,
+  .control-vehiculos .formulario > .campo:has(textarea),
+  .campos-control > section,
+  .campos-control > fieldset,
+  .campos-control > p,
+  .campos-control > button,
+  .campos-control > .campo:has(textarea) {
+    grid-column: 1/-1;
+  }
+  .campos-control > button[type="button"] {
+    justify-self: start;
+  }
+  .formulario .campo label {
+    font-size: 16px;
+    line-height: 1.5;
+    margin-top: 0;
+  }
+  .formulario input,
+  .formulario select,
+  .formulario textarea {
+    font-size: 17px;
+    min-height: 52px;
+    padding: 14px;
+  }
+  .formulario label {
+    font-size: 16px;
+  }
+  .formulario .control {
+    font-size: 15px;
+  }
+  .formulario .control input {
+    min-height: 18px;
+  }
+  .formulario .campo small,
+  .seleccion-adjuntos small {
+    font-size: 14px;
+  }
+  .formulario input[type="file"] {
+    font-size: 15px;
+  }
+  .nota-movimiento {
+    font-size: 15px;
+  }
+  .filtros {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 24px;
+  }
+  .filtros label {
+    font-size: 15px;
+    grid-column: 1/-1;
+  }
+  .filtros input,
+  .filtros select,
+  .filtros button {
+    grid-column: 1/-1;
+    min-height: 50px;
+    font-size: 17px;
+  }
+  .datos-detalle {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 28px;
+  }
+  .datos-detalle dt {
+    font-size: 15px;
+  }
+  .datos-detalle dd {
+    font-size: 17px;
+  }
+  .mapa-fotos {
+    grid-template-columns: minmax(0, 1fr) 100px minmax(0, 1fr);
+    gap: 18px;
+    max-width: 900px;
+    margin: 20px auto;
+  }
+  .dibujo-camion svg {
+    width: 90px;
+    height: 250px;
+  }
+  .dibujo-camion small {
+    font-size: 11px;
+  }
+  .vista-0,
+  .vista-3,
+  .vista-4 {
+    max-width: 300px;
+  }
+  .foto-vehiculo img,
+  .foto-vacia {
+    height: 160px;
+  }
+  .mapa-fotos .foto-vehiculo {
+    padding: 14px;
+  }
+  .mapa-fotos .foto-vehiculo h4 {
+    font-size: 15px;
+  }
+  .mapa-fotos .seleccionar-foto {
+    font-size: 15px;
+    padding: 13px 10px;
+  }
+  .seccion-fotos > p {
+    font-size: 16px;
+  }
+  .boton-principal,
+  .boton-secundario {
+    min-height: 50px;
+  }
+  .opcion-movimiento {
+    padding: 24px;
+    min-height: 125px;
+  }
+  .opcion-movimiento strong {
+    font-size: 19px;
+  }
+  .opcion-movimiento small {
+    font-size: 15px;
+  }
+}
+@media (min-width: 900px) {
+  .contenido-app > section > .tarjetas-controles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .inicio-app {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+    column-gap: 26px;
+  }
+  .inicio-app > .fecha-app,
+  .inicio-app > h2,
+  .inicio-app > .subtitulo-app,
+  .inicio-app > .titulo-seccion-app,
+  .inicio-app > .tarjetas-controles,
+  .inicio-app > .vacio-app {
+    grid-column: 1/-1;
+  }
+  .inicio-app > .hero-operacion,
+  .inicio-app > .metricas-app {
+    margin: 20px 0 24px;
+    align-self: stretch;
+  }
+  .inicio-app > .hero-operacion {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .inicio-app > .hero-operacion button {
+    align-self: flex-start;
+  }
+  .inicio-app > .metricas-app .metrica-app {
+    justify-content: center;
+  }
+  .contenido-app > .inicio-app > .tarjetas-controles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .inicio-app > .movimiento-app {
+    margin-bottom: 20px;
+  }
+}

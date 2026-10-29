@@ -1,0 +1,133 @@
+/* Complementos móviles para los controles React. Se conserva el estilo de TransReport. */
+.navegacion-controles {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.navegacion-controles label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #52657d;
+}
+.navegacion-controles select {
+  width: 100%;
+  padding: 12px;
+  font: inherit;
+  color: #14365e;
+  background: #fff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  min-height: 44px;
+}
+.campos-control {
+  display: grid;
+  gap: 12px;
+}
+.panel-control {
+  min-width: 0;
+}
+.panel-control .filtros {
+  margin-top: 22px;
+}
+.panel-control p,
+.panel-control li {
+  overflow-wrap: anywhere;
+}
+.campo small,
+.seleccion-adjuntos small {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+.seleccion-adjuntos {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+.adjuntos-control {
+  display: grid;
+  gap: 14px;
+}
+.archivo-control {
+  min-width: 0;
+  border: 1px solid #dce3ed;
+  border-radius: 8px;
+  padding: 12px;
+}
+.archivo-control img {
+  max-width: 100%;
+  height: 140px;
+  display: block;
+  object-fit: contain;
+}
+.archivo-control p {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.archivo-control a {
+  display: inline-block;
+  min-height: 40px;
+  padding: 10px 0;
+  color: #2458e8;
+}
+.adjunto-seleccionado {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 10px;
+}
+.aviso-control {
+  background: #eef4ff;
+  padding: 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.series-retorno {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.panel-control details {
+  overflow-wrap: anywhere;
+}
+.boton-principal,
+.boton-secundario {
+  min-height: 44px;
+}
+.panel-control input[type="file"] {
+  font-size: 13px;
+  max-width: 100%;
+}
+@media (min-width: 640px) {
+  .aplicacion {
+    max-width: 720px;
+  }
+  .contenido {
+    padding: 28px;
+  }
+  .series-retorno {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .cuadricula-fotos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 360px) {
+  .contenido,
+  .cabecera {
+    padding: 18px;
+  }
+  .acciones-tarjeta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .formulario input,
+  .formulario select,
+  .formulario textarea {
+    font-size: 16px;
+  }
+  .mapa-fotos {
+    gap: 8px 5px;
+  }
+}

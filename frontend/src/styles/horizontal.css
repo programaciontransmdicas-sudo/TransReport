@@ -1,0 +1,187 @@
+/* La orientación horizontal de una tablet tiene una distribución propia. */
+@media (min-width: 900px) and (orientation: landscape) and (min-height: 600px) {
+  .aplicacion.app-movil {
+    width: 100%;
+    max-width: none;
+    min-height: 100dvh;
+    margin: 0;
+  }
+  .app-movil:not(.formulario-abierto) > .cabecera {
+    margin-left: 104px;
+  }
+  .app-movil:not(.formulario-abierto) > .contenido-app {
+    margin-left: 104px;
+  }
+  .app-movil > .cabecera {
+    padding: 20px 36px;
+  }
+  .app-movil > .contenido-app {
+    padding: 28px 36px 40px;
+    min-width: 0;
+  }
+  .barra-inferior-app {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    transform: none;
+    width: 104px;
+    max-width: none;
+    border-top: 0;
+    border-right: 1px solid #e0e7f2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 18px;
+    padding: 24px 8px calc(24px + env(safe-area-inset-bottom, 0px));
+    background: #fff;
+  }
+  .barra-inferior-app button {
+    width: 100%;
+    min-height: 82px;
+    font-size: 12px;
+    gap: 9px;
+    border-radius: 12px;
+  }
+  .barra-inferior-app button[aria-current="page"] {
+    background: #edf3ff;
+  }
+  .barra-inferior-app button[aria-current="page"]::before {
+    top: 25%;
+    left: -8px;
+    width: 3px;
+    height: 50%;
+    border-radius: 0 3px 3px 0;
+  }
+  .barra-inferior-app .icono-app {
+    width: 26px;
+    height: 26px;
+  }
+  .inicio-app {
+    grid-template-columns: minmax(0, 1.5fr) minmax(300px, 1fr);
+    column-gap: 28px;
+  }
+  .inicio-app > .hero-operacion {
+    padding: 26px 30px;
+  }
+  .inicio-app > .hero-operacion,
+  .inicio-app > .metricas-app {
+    margin: 14px 0 18px;
+  }
+  .inicio-app > .titulo-seccion-app {
+    margin: 20px 0 14px;
+  }
+  .contenido-app > .inicio-app > .tarjetas-controles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .contenido-app > section > .tarjetas-controles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .acceso-control {
+    min-height: 154px;
+    padding: 22px;
+  }
+  .acceso-control strong {
+    font-size: 18px;
+  }
+  .control-vehiculos > .indicadores {
+    margin: 18px 0;
+  }
+  .control-vehiculos .opciones-movimiento {
+    margin: 20px 0;
+  }
+  .control-vehiculos > .filtros {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(190px, 1fr) auto;
+    gap: 8px 20px;
+    align-items: end;
+  }
+  .control-vehiculos > .filtros label {
+    grid-column: auto;
+    grid-row: 1;
+    margin: 0;
+  }
+  .control-vehiculos > .filtros label[for="buscar-vehiculo"] {
+    grid-column: 1;
+  }
+  .control-vehiculos > .filtros label[for="estado-filtro"] {
+    grid-column: 2;
+  }
+  .control-vehiculos > .filtros input {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .control-vehiculos > .filtros select {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .control-vehiculos > .filtros button {
+    grid-column: 3;
+    grid-row: 2;
+    margin: 0;
+    white-space: nowrap;
+  }
+  .panel-control > .filtros {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(190px, 1fr) auto;
+    gap: 8px 20px;
+    align-items: end;
+  }
+  .panel-control > .filtros label {
+    grid-column: auto;
+    grid-row: 1;
+    margin: 0;
+  }
+  .panel-control > .filtros label[for="buscar-control"] {
+    grid-column: 1;
+  }
+  .panel-control > .filtros label[for="filtrar-control"] {
+    grid-column: 2;
+  }
+  .panel-control > .filtros input {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .panel-control > .filtros select {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .panel-control > .filtros button {
+    grid-column: 3;
+    grid-row: 2;
+    margin: 0;
+    white-space: nowrap;
+  }
+  .formulario-abierto .control-vehiculos .formulario,
+  .formulario-abierto .campos-control {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 30px;
+  }
+}
+@media (min-width: 900px) and (max-width: 1050px) and (orientation: landscape) and (min-height: 600px) {
+  .app-movil > .cabecera {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .app-movil > .contenido-app {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .contenido-app > section > .tarjetas-controles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .contenido-app > .inicio-app > .tarjetas-controles {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .acceso-control {
+    padding: 18px 14px;
+  }
+  .acceso-control strong {
+    font-size: 16px;
+  }
+  .acceso-control small {
+    font-size: 12px;
+  }
+}

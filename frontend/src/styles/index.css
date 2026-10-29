@@ -1,0 +1,476 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #eef2f7;
+  color: #152a43;
+}
+
+.aplicacion {
+  max-width: 480px;
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #ffffff;
+}
+
+.cabecera {
+  padding: 24px;
+  background: #14365e;
+  color: #ffffff;
+}
+
+.cabecera h1 {
+  margin: 0;
+}
+
+.cabecera p {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.contenido {
+  padding: 24px;
+}
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.boton-principal,
+.boton-secundario {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.boton-principal {
+  border: 0;
+  background: #2458e8;
+  color: white;
+}
+
+.boton-secundario {
+  border: 1px solid #dce3ed;
+  background: white;
+  color: #14365e;
+}
+
+.formulario {
+  display: grid;
+  gap: 10px;
+}
+
+.formulario label {
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.formulario input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+.formulario .boton-principal {
+  margin-top: 18px;
+}
+
+.tarjeta {
+  padding: 18px;
+  margin-bottom: 12px;
+  border: 1px solid #dce3ed;
+  border-radius: 12px;
+}
+
+.tarjeta strong {
+  font-size: 18px;
+}
+
+.tarjeta p {
+  overflow-wrap: anywhere;
+}
+
+.estado {
+  display: inline-block;
+  padding: 5px 10px;
+  background: #eaf7f0;
+  color: #18704a;
+  border-radius: 20px;
+  font-size: 13px;
+}
+.seccion-fotos {
+  min-width: 0;
+  margin-top: 16px;
+}
+
+.seccion-fotos > p {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.cuadricula-fotos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.foto-vehiculo {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #dce3ed;
+  border-radius: 10px;
+}
+
+.foto-vehiculo h4 {
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.foto-vehiculo img,
+.foto-vacia {
+  width: 100%;
+  height: 110px;
+  border-radius: 6px;
+}
+
+.foto-vehiculo img {
+  display: block;
+  object-fit: cover;
+}
+
+.foto-vacia {
+  display: grid;
+  place-items: center;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.seleccionar-foto {
+  display: block;
+  padding: 10px;
+  background: #eaf0ff;
+  color: #2458e8;
+  border-radius: 6px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.seleccionar-foto input {
+  display: none;
+}
+
+.nombre-archivo {
+  display: block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+  color: #64748b;
+}
+
+.quitar-foto {
+  margin-top: 10px;
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #b42318;
+}
+
+.mensaje-error {
+  color: #b42318;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.mapa-fotos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px minmax(0, 1fr);
+  grid-template-areas:
+    "frente frente frente"
+    "izquierda camion derecha"
+    "posterior posterior posterior"
+    "cabina cabina cabina";
+  gap: 12px 8px;
+  align-items: center;
+}
+
+.vista-0 {
+  grid-area: frente;
+}
+
+.vista-1 {
+  grid-area: izquierda;
+}
+
+.vista-2 {
+  grid-area: derecha;
+}
+
+.vista-3 {
+  grid-area: posterior;
+}
+
+.vista-4 {
+  grid-area: cabina;
+}
+
+.vista-0,
+.vista-3,
+.vista-4 {
+  width: 100%;
+  max-width: 220px;
+  justify-self: center;
+}
+
+.dibujo-camion {
+  grid-area: camion;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.dibujo-camion svg {
+  display: block;
+  width: 54px;
+  height: 180px;
+}
+
+.dibujo-camion small {
+  font-size: 8px;
+  color: #64748b;
+}
+
+.mapa-fotos .foto-vehiculo {
+  padding: 9px;
+}
+
+.mapa-fotos .foto-vehiculo h4 {
+  font-size: 12px;
+}
+
+.mapa-fotos .seleccionar-foto {
+  padding: 10px 5px;
+  font-size: 12px;
+}
+.campo {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.formulario select,
+.formulario textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  font: inherit;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: #152a43;
+}
+
+.formulario textarea {
+  resize: vertical;
+}
+
+.controles {
+  min-width: 0;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid #dce3ed;
+  border-radius: 10px;
+}
+
+.controles legend {
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.formulario .control {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.formulario .control input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  padding: 0;
+}
+.acciones-tarjeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.datos-detalle > div {
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.datos-detalle dt {
+  margin-bottom: 6px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.datos-detalle dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.foto-detalle {
+  min-width: 0;
+  margin: 0;
+}
+
+.foto-detalle img {
+  display: block;
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.foto-detalle figcaption {
+  margin: 8px 0 16px;
+  font-size: 13px;
+}
+.indicadores {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.indicadores > div {
+  display: grid;
+  gap: 8px;
+  padding: 18px;
+  background: #eef4ff;
+  border-radius: 10px;
+}
+
+.indicadores strong {
+  font-size: 28px;
+  color: #14365e;
+}
+
+.indicadores span {
+  font-size: 13px;
+  color: #52657d;
+}
+
+.filtros {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.filtros label {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.filtros input,
+.filtros select {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  font: inherit;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: white;
+  color: #152a43;
+}
+
+.filtros button {
+  margin-top: 8px;
+}
+.estado-guardado{
+  font-size: 17px;
+  color: #64748b;
+}
+.selector-perfil {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 0;
+}
+
+.campo.formulario {
+  margin-bottom: 20px;
+}
+.selector-bandeja {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.bloque-firma {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #dce3ed;
+}
+
+.lienzo-firma {
+  display: block;
+  width: 100%;
+  height: 150px;
+  border: 2px dashed #a7b8cf;
+  border-radius: 10px;
+  background: white;
+  touch-action: none;
+}
+
+.formulario .conformidad-firma {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.formulario .conformidad-firma input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  padding: 0;
+}
+
+.firma-registrada {
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid #cde5d8;
+  border-radius: 10px;
+  background: #eff9f3;
+}
+
+.firma-registrada img {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  background: white;
+  border-radius: 8px;
+}
