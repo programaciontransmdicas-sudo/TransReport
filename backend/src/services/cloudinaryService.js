@@ -1,8 +1,9 @@
 import { Readable } from "node:stream";
 import { ErrorHttp } from "../utils/ErrorHttp.js";
-export function crearAlmacenCloudinary(cloudinary) {
+export function crearAlmacenCloudinary(cloudinary, logger = console) {
   return {
     async subir(f, publicId) {
+      try {
       await new Promise((resolve, reject) => {
         const stream = cloudinary.uploader.upload_stream(
           {
@@ -20,6 +21,10 @@ export function crearAlmacenCloudinary(cloudinary) {
         stream.on("error", reject);
         stream.end(f.buffer);
       });
+      } catch (error) {
+        logger.error({ codigo: "ERROR_SUBIDA_ARCHIVO", motivo: String(error?.code || error?.name || "desconocido"), estado: Number(error?.http_code) || undefined });
+        throw error;
+      }
     },
     borrar(f) {
       return cloudinary.uploader.destroy(f.publicId, {

@@ -4,7 +4,7 @@ import { controles } from "../../config/controles.js";
 import { fechaLegible } from "../../utils/fechas.js";
 export function TarjetasControles({ onElegir, rapidos = false }) {
   const lista = rapidos
-    ? ["vehiculos", "personal", "llaves", "rondas"].map((id) =>
+    ? ["vehiculos", "personal", "relevos", "rondas"].map((id) =>
         controles.find((c) => c.id === id),
       )
     : controles;

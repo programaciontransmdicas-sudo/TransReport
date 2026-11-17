@@ -1,6 +1,25 @@
 import { setTimeout } from "node:timers/promises";
-const consulta =
-  "SELECT c.id,r.id,a.id,d.id,d.ip,o.clave,e.id FROM transreport.controles_vehiculos c,transreport.registros r,transreport.archivos a,transreport.dispositivos d,transreport.operaciones o,transreport.eventos e LIMIT 0";
+const consulta = `
+  SELECT
+    c.id,
+    r.id,
+    a.id,
+    d.id,
+    d.ip,
+    d.activacion_hash,
+    d.credencial_vence_en,
+    d.credencial_version,
+    o.clave,
+    e.id
+  FROM
+    transreport.controles_vehiculos c,
+    transreport.registros r,
+    transreport.archivos a,
+    transreport.dispositivos d,
+    transreport.operaciones o,
+    transreport.eventos e
+  LIMIT 0
+`;
 export function esFalloTemporal(error) {
   return (
     [

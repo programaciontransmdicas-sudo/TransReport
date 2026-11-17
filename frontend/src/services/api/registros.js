@@ -125,6 +125,7 @@ export function ingresarVehiculo(entrada) {
     "conductor",
     "dni",
     "operacion",
+    "clienteOperacionId",
     "fecha",
     "agente",
     "kilometraje",

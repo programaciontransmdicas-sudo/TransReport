@@ -10,7 +10,7 @@ export async function buscarVehiculosMaestro(c, placa) {
 export async function buscarOperacionActiva(c, id) {
   return (
     await c.query(
-      "SELECT id FROM public.cliente_operaciones WHERE id=$1 AND activo=true",
+      "SELECT co.id FROM public.cliente_operaciones co JOIN public.clientes c ON c.id=co.cliente_id WHERE co.id=$1 AND co.activo=true AND c.activo=true",
       [id],
     )
   ).rows[0];

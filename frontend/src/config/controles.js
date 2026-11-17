@@ -14,13 +14,6 @@ export const controles = [
     accion: "Registrar ingreso",
   },
   {
-    id: "llaves",
-    clave: "llaves",
-    nombre: "Llaves",
-    icono: "llave",
-    accion: "Registrar recojo",
-  },
-  {
     id: "relevos",
     clave: "relevos",
     nombre: "Relevos",

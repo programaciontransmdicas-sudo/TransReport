@@ -39,7 +39,7 @@ function conexion({ fallarCommit = false } = {}) {
       throw new Error("Conexión no utilizable");
     }
     return {
-      rows: sql.includes("SELECT base,activo")
+      rows: sql.includes("FROM transreport.dispositivos")
         ? [{ base: "Peruarbo", activo: true, ip: "127.0.0.1" }]
         : [],
     };
@@ -51,7 +51,7 @@ test("Un reset fuera de una consulta ya no termina el proceso Node", () => {
   const codigo = `import {EventEmitter} from 'node:events';
  import {crearOperaciones} from ${JSON.stringify(new URL("../src/services/operacionesService.js", import.meta.url).href)};
  const c=new EventEmitter();let destruir;
- c.query=async sql=>({rows:sql.includes('SELECT base,activo')?[{base:'Peruarbo',activo:true,ip:'127.0.0.1'}]:[]});c.release=v=>destruir=v;
+ c.query=async sql=>({rows:sql.includes('FROM transreport.dispositivos')?[{base:'Peruarbo',activo:true,ip:'127.0.0.1'}]:[]});c.release=v=>destruir=v;
  const ejecutar=crearOperaciones({pool:{connect:async()=>c},almacen:{borrar:async()=>{}},logger:{error(){}}});
  try{await ejecutar(${JSON.stringify(datos)},async()=>{await new Promise(resolve=>setImmediate(()=>{c.emit('error',Object.assign(new Error('Reset'),{code:'ECONNRESET'}));resolve();}));return ${JSON.stringify(fila)};});process.exitCode=2;}
  catch(e){if(e.estado!==503||destruir!==true||c.listenerCount('error')!==0)process.exitCode=3;else console.log('CONTROLADO_503');}`;
@@ -119,6 +119,7 @@ test("Un COMMIT sin confirmación conserva los archivos y no repite la operació
 });
 test("La caída de PostgreSQL responde HTTP 503 y el backend sigue respondiendo /health", async () => {
   const app = crearApp({
+    modoAcceso: "red",
     pool: {
       query: async () => {
         throw Object.assign(new Error("Reset"), { code: "ECONNRESET" });

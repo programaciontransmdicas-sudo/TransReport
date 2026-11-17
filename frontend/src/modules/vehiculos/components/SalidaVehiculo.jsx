@@ -1,5 +1,8 @@
+import { useOperacionVehiculo } from "../../../components/catalogos/useOperacionVehiculo.js";
+import Selector from "../../../components/comunes/Selector.jsx";
 import { nuevoId } from "../../../utils/identificador.js";
 import { useState, useRef } from "react";
+import { BuscadorCatalogo, useVinculoPersona } from "../../../components/catalogos/BuscadorCatalogo.jsx";
 import FotosVehiculo, { VISTAS } from "./FotosVehiculo.jsx";
 import { leerConfiguracion } from "../../../services/api/configuracion.js";
 import { mostrarPlaca } from "../services/movimientosVehiculos.js";
@@ -8,6 +11,9 @@ export default function SalidaVehiculo({ vehiculo, onGuardar, onVolver }) {
   const [fotos, setFotos] = useState({}),
     [error, setError] = useState("");
   const idNuevo = useRef(nuevoId());
+  const formulario = useRef(null);
+  const vinculoConductor = useVinculoPersona(formulario, 'conductor', 'dni');
+  const vinculoOperacion = useOperacionVehiculo(formulario);
   const independiente = !vehiculo;
   function cambiarFoto(vista, archivo) {
     setFotos((prev) => ({ ...prev, [vista]: archivo }));
@@ -65,6 +71,7 @@ export default function SalidaVehiculo({ vehiculo, onGuardar, onVolver }) {
       setError("Complete los datos de identificación de la unidad.");
       return;
     }
+    if (f.get("clienteOperacionId")) identificacion.clienteOperacionId = Number(f.get("clienteOperacionId"));
     identificacion.placa = mostrarPlaca(identificacion.placa);
     identificacion.carreta = mostrarPlaca(identificacion.carreta);
     onGuardar({ identificacion, salida, idNuevo: idNuevo.current });
@@ -86,7 +93,8 @@ export default function SalidaVehiculo({ vehiculo, onGuardar, onVolver }) {
       ) : (
         <p>Conductor: {vehiculo.conductor}</p>
       )}
-      <form className="formulario formulario-vehiculo" onSubmit={guardar}>
+      <form ref={formulario} className="formulario formulario-vehiculo" onSubmit={guardar}>
+        <input type="hidden" name="clienteOperacionId" />
         {independiente && (
           <section className="seccion-formulario">
             <div className="cabecera-seccion">
@@ -95,8 +103,8 @@ export default function SalidaVehiculo({ vehiculo, onGuardar, onVolver }) {
             </div>
             <div className="grilla-campos-formulario">
               <div className="campo">
-                <label htmlFor="base-salida">Base *</label>
-                <select
+                <label id="etiqueta-base-salida" htmlFor="base-salida">Base *</label>
+                <Selector
                   id="base-salida"
                   name="base"
                   required
@@ -106,47 +114,36 @@ export default function SalidaVehiculo({ vehiculo, onGuardar, onVolver }) {
                   {[leerConfiguracion()?.dispositivo.base].map((b) => (
                     <option key={b}>{b}</option>
                   ))}
-                </select>
+                </Selector>
               </div>
               <div className="campo">
                 <label htmlFor="placa-salida">Placa de tracto / unidad *</label>
-                <input
-                  id="placa-salida"
-                  name="placa"
-                  required
-                  pattern="[A-Za-z0-9]{3}-?[A-Za-z0-9]{3}"
-                  maxLength={7}
-                />
+                <BuscadorCatalogo tipo="vehiculos" id="placa-salida" name="placa" required
+                  onSeleccionar={vinculoOperacion.elegirPlaca} onEditar={vinculoOperacion.editarPlaca}
+                  pattern="[A-Za-z0-9]{3}-?[A-Za-z0-9]{3}" maxLength={7} />
               </div>
               <div className="campo">
                 <label htmlFor="carreta-salida">Placa de carreta</label>
-                <input
-                  id="carreta-salida"
-                  name="carreta"
-                  pattern="[A-Za-z0-9]{3}-?[A-Za-z0-9]{3}"
-                  maxLength={7}
-                />
+                <BuscadorCatalogo tipo="vehiculos" id="carreta-salida" name="carreta"
+                  pattern="[A-Za-z0-9]{3}-?[A-Za-z0-9]{3}" maxLength={7} />
               </div>
               <div className="campo">
                 <label htmlFor="conductor-salida">
                   Apellidos y nombres del conductor *
                 </label>
-                <input id="conductor-salida" name="conductor" required />
+                <BuscadorCatalogo tipo="personal" id="conductor-salida" name="conductor" required maxLength={255}
+                  onSeleccionar={vinculoConductor.elegir} onEditar={valor => vinculoConductor.editar('conductor', valor)} />
               </div>
               <div className="campo">
                 <label htmlFor="dni-salida">DNI del conductor *</label>
-                <input
-                  id="dni-salida"
-                  name="dni"
-                  required
-                  pattern="[0-9]{8}"
-                  maxLength={8}
-                  inputMode="numeric"
-                />
+                <BuscadorCatalogo tipo="personal" id="dni-salida" name="dni" required
+                  pattern="[0-9]{8}" maxLength={8} inputMode="numeric"
+                  onSeleccionar={vinculoConductor.elegir} onEditar={valor => vinculoConductor.editar('dni', valor)} />
               </div>
               <div className="campo">
-                <label htmlFor="operacion-salida">Operación *</label>
-                <input id="operacion-salida" name="operacion" required />
+                <label htmlFor="operacion-salida">Cliente / Operación *</label>
+                <BuscadorCatalogo tipo="operaciones" id="operacion-salida" name="operacion" required
+                  onSeleccionar={vinculoOperacion.elegirOperacion} onEditar={vinculoOperacion.editarOperacion} />
               </div>
             </div>
           </section>

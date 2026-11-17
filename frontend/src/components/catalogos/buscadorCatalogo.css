@@ -1,0 +1,18 @@
+.catalogo-buscador, .catalogo-caja { min-width: 0; }
+.catalogo-caja { position: relative; }
+.catalogo-caja:focus-within { z-index: 20; }
+.formulario .campo .catalogo-caja input.catalogo-entrada { box-sizing: border-box; display: block; width: 100%; max-width: 100%; min-width: 0; padding-left: 38px; }
+.catalogo-lupa { position: absolute; top: 50%; left: 12px; transform: translateY(-50%); pointer-events: none; color: #68768e; font-size: 22px; }
+.catalogo-resultados { position: absolute; z-index: 21; top: calc(100% + 6px); left: 0; right: 0; min-width: 0; overflow: hidden; border: 1px solid #dce3ee; border-radius: 10px; background: #fff; color: #101b33; box-shadow: 0 12px 30px rgba(16,27,51,.16); }
+.catalogo-encabezado { padding: 10px 12px 6px; color: #68768e; font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+.catalogo-resultados ul { list-style: none; margin: 0; padding: 0 5px 5px; max-height: 225px; overflow-y: auto; }
+.catalogo-resultados li button { display: flex; align-items: flex-start; gap: 10px; width: 100%; min-width: 0; padding: 9px 8px; border: 0; border-radius: 7px; background: transparent; color: #101b33; font: inherit; text-align: left; white-space: normal; cursor: pointer; }
+.catalogo-resultados li button:hover, .catalogo-resultados li button:focus-visible { background: #f0f4ff; outline: 2px solid #9db9ff; outline-offset: -2px; }
+.catalogo-icono { display: inline-flex; flex: 0 0 30px; width: 30px; height: 30px; align-items: center; justify-content: center; border-radius: 8px; color: #2458e8; background: #edf2ff; }
+.catalogo-contenido { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.catalogo-contenido strong { font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
+.catalogo-contenido span { color: #65748b; font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
+.catalogo-resultados p { margin: 0; padding: 12px; color: #65748b; font-size: 12px; }
+
+/* El listado no debe cortarse en los bordes de la sección activa. */
+.formulario .seccion-formulario:focus-within { overflow: visible; position: relative; z-index: 20; }

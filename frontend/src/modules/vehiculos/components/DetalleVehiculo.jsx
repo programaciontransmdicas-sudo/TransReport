@@ -4,7 +4,7 @@ import { VISTAS } from "./FotosVehiculo.jsx";
 import { fechaLegible } from "../../../utils/fechas.js";
 
 function FotografiaGuardada({ archivo, vista }) {
-  const { url: direccion, error } = useArchivoApi(archivo);
+  const { url: direccion, error, reintentar } = useArchivoApi(archivo);
   return (
     <figure className="foto-detalle">
       {direccion ? (
@@ -12,7 +12,7 @@ function FotografiaGuardada({ archivo, vista }) {
           <img src={direccion} alt={vista} />
         </a>
       ) : (
-        <p>{error || "Cargando fotografía…"}</p>
+        <div><p>{error || "Cargando fotografía…"}</p>{error && <button type="button" className="boton-secundario" onClick={reintentar}>Reintentar</button>}</div>
       )}
       <figcaption>{vista}</figcaption>
     </figure>

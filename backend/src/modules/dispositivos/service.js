@@ -1,5 +1,19 @@
-import { buscarEquipoPorIp } from "./repository.js";
+import {
+  buscarEquipoPorIp,
+  buscarEquipoPorCredencial,
+  consumirHabilitacion,
+} from "./repository.js";
+
 import { isIP } from "node:net";
+
+import {
+  huellaSecreto,
+  nuevoSecreto,
+  leerCredencial,
+} from "./credencial.js";
+
+import { habilitacionSchema } from "./schemas.js";
+import { ErrorHttp } from "../../utils/ErrorHttp.js";
 export function normalizarIp(valor) {
   let ip = String(valor || "").replace(/^::ffff:(?=\d+\.)/i, "");
   if (ip === "::1" || ip === "0:0:0:0:0:0:0:1") ip = "127.0.0.1";
@@ -25,4 +39,57 @@ export async function consultarEquipo(pool, direccion) {
     return { autorizado: false, ip, dispositivo: null };
   const dispositivo = await buscarEquipoPorIp(pool, ip);
   return { autorizado: !!dispositivo, ip, dispositivo };
+}
+export async function consultarSolicitud(
+  pool,
+  req,
+  { modoAcceso, cookieSegura },
+) {
+  if (modoAcceso === "red") {
+    const acceso = await consultarEquipo(pool, req.ip);
+
+    return {
+      ...acceso,
+      modo: "red",
+    };
+  }
+
+  const credencial = leerCredencial(req, cookieSegura);
+
+  const dispositivo = credencial
+    ? await buscarEquipoPorCredencial(
+        pool,
+        huellaSecreto(credencial),
+      )
+    : null;
+
+  return {
+    autorizado: !!dispositivo,
+    dispositivo,
+    modo: "credencial",
+  };
+}
+
+export async function habilitarNavegador(pool, datos) {
+  const { codigo } = habilitacionSchema.parse(datos);
+
+  const credencial = nuevoSecreto();
+
+  const dispositivo = await consumirHabilitacion(
+    pool,
+    huellaSecreto(codigo),
+    huellaSecreto(credencial),
+  );
+
+  if (!dispositivo) {
+    throw new ErrorHttp(
+      403,
+      "El código ya se utilizó, venció o no corresponde a un equipo activo. Solicita uno nuevo al administrador.",
+    );
+  }
+
+  return {
+    dispositivo,
+    credencial,
+  };
 }

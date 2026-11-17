@@ -21,7 +21,7 @@ import {
 } from "../../utils/reglas.js";
 import { bloquear } from "../../services/operacionesService.js";
 import {
-  guardarArchivo,
+  guardarArchivos,
   seleccionarArchivos,
   exigirCamposArchivos,
 } from "../archivos/service.js";
@@ -67,25 +67,16 @@ export function crearVehiculosService({ almacen }) {
       evento.precintos || "",
       evento.observaciones || "",
     ]);
-    for (const [campo, vista] of Object.entries(VISTAS)) {
-      const f = archivos.find((f) => f.campo === campo),
-        { referencia, publicId } = await guardarArchivo({
-          cliente: c,
-          almacen,
-          tipo: "vehiculos",
-          registroId: datos.id,
-          base: datos.base,
-          foto: f,
-          intentadas,
-        });
-      await insertarFotoVehiculo(c, [
-        referencia.id,
-        id,
-        vista,
-        publicId,
-        f.formato,
-        f.bytes,
-      ]);
+    const vistas = Object.entries(VISTAS);
+    const guardadas = await guardarArchivos({
+      cliente: c, almacen, tipo: "vehiculos", registroId: datos.id, base: datos.base,
+      fotos: vistas.map(([campo]) => archivos.find((f) => f.campo === campo)), intentadas,
+    });
+    for (let i = 0; i < vistas.length; i++) {
+      const [, vista] = vistas[i];
+      const f = archivos.find((archivo) => archivo.campo === vistas[i][0]);
+      const { referencia, publicId } = guardadas[i];
+      await insertarFotoVehiculo(c, [referencia.id, id, vista, publicId, f.formato, f.bytes]);
       fotos[vista] = referencia;
     }
     return fotos;

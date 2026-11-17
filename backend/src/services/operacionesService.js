@@ -66,11 +66,27 @@ export function crearOperaciones({ pool, almacen, logger = console }) {
       await c.query("SET LOCAL lock_timeout='5s'");
       const d = (
         await c.query(
-          "SELECT base,activo,host(ip) AS ip FROM transreport.dispositivos WHERE id=$1 FOR SHARE",
+          `SELECT
+   base,
+   activo,
+   host(ip) AS ip,
+   credencial_version AS version,
+   credencial_vence_en > now() AS vigente
+ FROM transreport.dispositivos
+ WHERE id = $1
+ FOR SHARE`,
           [dispositivo.id],
         )
       ).rows[0];
-      if (!d?.activo || d.base !== dispositivo.base || d.ip !== dispositivo.ip)
+      if (
+  !d?.activo ||
+  d.base !== dispositivo.base ||
+  (
+    dispositivo.modoAcceso === "credencial"
+      ? d.version !== dispositivo.version || !d.vigente
+      : d.ip !== dispositivo.ip
+  )
+)
         throw Object.assign(
           new ErrorHttp(403, "Equipo revocado o modificado."),
           { codigo: "EQUIPO_NO_AUTORIZADO" },

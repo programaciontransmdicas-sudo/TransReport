@@ -21,7 +21,7 @@ test("La cuota de dos subidas simultáneas sigue siendo global entre módulos", 
       await puerta;
       return {
         async query(sql, parametros) {
-          if (sql.includes("SELECT base,activo"))
+          if (sql.includes("FROM transreport.dispositivos"))
             return {
               rows: [{ base: "Peruarbo", activo: true, ip: "127.0.0.1" }],
             };
@@ -36,6 +36,8 @@ test("La cuota de dos subidas simultáneas sigue siendo global entre módulos", 
     },
   };
   const app = crearApp({
+    modoAcceso: "red",
+    esperaCargaMs: 0,
     pool,
     almacen: { subir: async () => {} },
     limitar: false,
@@ -94,4 +96,39 @@ test("La cuota de dos subidas simultáneas sigue siendo global entre módulos", 
       JSON.stringify(respuestas.map((r) => r.body)),
     );
   }
+});
+
+test('el tercer envío espera un espacio y continúa cuando termina otro', async () => {
+  let liberar, avisar;
+  const puerta = new Promise(resolve => { liberar = resolve; });
+  const dos = new Promise(resolve => { avisar = resolve; });
+  let conexiones = 0;
+  const dispositivo = { id: randomUUID(), base: 'Peruarbo', nombre: 'Prueba' };
+  const pool = {
+    query: async () => ({ rows: [dispositivo] }),
+    async connect() {
+      if (++conexiones === 2) avisar();
+      if (conexiones <= 2) await puerta;
+      return { async query(sql, p) {
+        if (sql.includes('FROM transreport.dispositivos')) return {rows:[{base:'Peruarbo',activo:true,ip:'127.0.0.1'}]};
+        if (sql.startsWith('INSERT INTO transreport.registros')) return {rows:[{id:p[0],datos:p[3],revision:1}]};
+        return {rows:[]};
+      }, release() {} };
+    },
+  };
+  const app = crearApp({ modoAcceso:'red', pool, almacen:{subir:async()=>{}}, limitar:false, logger:{error(){}}, esperaCargaMs:2000 });
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl6mhsAAAAASUVORK5CYII=', 'base64');
+  const ronda={base:'Peruarbo',fecha:'2026-10-28T08:00',fin:'2026-10-28T09:00',tipo:'Programada',turno:'Día',nombre:'Vigilante',presentaAnomalias:'Sí',anomalias:'Iluminación'};
+  const enviar=()=>request(app).post('/api/rondas').set('Idempotency-Key',randomUUID()).field('datos',JSON.stringify(ronda)).attach('evidencias',png,'foto.png').then(r=>r);
+  const primeras=[enviar(),enviar()];
+  try {
+    await dos;
+    const tercera=enviar();
+    await new Promise(resolve=>setTimeout(resolve,50));
+    assert.equal(conexiones,2);
+    liberar();
+    const respuestas=await Promise.all([...primeras,tercera]);
+    assert.deepEqual(respuestas.map(r=>r.status),[201,201,201]);
+    assert.equal(conexiones,3);
+  } finally { liberar(); }
 });

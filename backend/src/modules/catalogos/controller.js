@@ -3,6 +3,28 @@ import { ErrorHttp } from "../../utils/ErrorHttp.js";
 
 export function crearCatalogosController({ repositorioCatalogos, logger }) {
   return {
+    async buscar(req, res) {
+      const tipo = req.params.tipo;
+      const texto = req.query.q;
+      if (!['personal', 'vehiculos', 'operaciones'].includes(tipo) || typeof texto !== 'string') {
+        return res.status(400).json({ mensaje: 'Búsqueda no válida.' });
+      }
+      const consulta = texto.trim();
+      if (consulta.length < 2 || (tipo === 'vehiculos' && consulta.replace(/[\s-]/g, '').length < 2)) return res.json([]);
+      if (consulta.length > 80) return res.status(400).json({ mensaje: 'La búsqueda admite hasta 80 caracteres.' });
+      try {
+        const filas = tipo === 'personal'
+          ? await repositorioCatalogos.buscarPersonas(consulta)
+          : tipo === 'operaciones'
+            ? await repositorioCatalogos.buscarOperaciones(consulta)
+            : await repositorioCatalogos.buscarPlacas(consulta);
+        res.set('Cache-Control', 'private, no-store');
+        return res.json(filas);
+      } catch (error) {
+        logger.error('Error buscando catálogo:', error.code || error.message);
+        return res.status(503).json({ mensaje: 'No se pudo consultar el catálogo.' });
+      }
+    },
     async consultarVehiculo(req, res) {
       try {
         const vehiculo = await obtenerVehiculoPorPlaca(

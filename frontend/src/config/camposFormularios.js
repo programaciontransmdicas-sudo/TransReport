@@ -11,12 +11,12 @@ const comun = () => [
 const notas = f("observaciones", "Observaciones", { tipo: "textarea" });
 export const personalIngreso = [
   ...comun(),
-  f("nombre", "Apellidos y nombres", { obligatorio: true }),
-  f("dni", "DNI", { obligatorio: true, patron: "[0-9]{8}", longitud: 8 }),
-  f("operacion", "Operación", { obligatorio: true }),
+  f("nombre", "Apellidos y nombres", { obligatorio: true, catalogo: "personal", vincularPersona: true }),
+  f("dni", "DNI", { obligatorio: true, patron: "[0-9]{8}", longitud: 8, catalogo: "personal", vincularPersona: true }),
+  f("operacion", "Cliente / Operación", { obligatorio: true, catalogo: "operaciones" }),
   f("motivo", "Motivo de ingreso", { obligatorio: true }),
-  f("placa", "Placa de tracto / cisterna"),
-  f("agente", "Agente de seguridad", { obligatorio: true }),
+  f("placa", "Placa de tracto / cisterna", { catalogo: "vehiculos" }),
+  f("agente", "Agente de seguridad", { obligatorio: true, catalogo: "personal" }),
   notas,
 ];
 export const personalSalida = [
@@ -61,7 +61,7 @@ export const terceros = [
   f("motivo", "Motivo de ingreso", { obligatorio: true }),
 ];
 export const relevo = [
-  f("nombre", "Nombres y apellidos", { obligatorio: true }),
+  f("nombre", "Nombres y apellidos", { obligatorio: true, catalogo: "personal" }),
   f("pendientesAnterior", "Pendientes", {
     tipo: "textarea",
     obligatorio: true,
@@ -98,7 +98,7 @@ export const rondas = [
     obligatorio: true,
   }),
   f("turno", "Turno", { opciones: ["Día", "Noche"], obligatorio: true }),
-  f("nombre", "Responsable de la ronda", { obligatorio: true }),
+  f("nombre", "Responsable de la ronda", { obligatorio: true, catalogo: "personal" }),
   f("fin", "Fecha y hora de término", {
     tipo: "datetime-local",
     obligatorio: true,
@@ -108,7 +108,7 @@ export const rondas = [
     obligatorio: true,
   }),
   f("anomalias", "Anomalías", { tipo: "textarea", obligatorio: true }),
-  f("seguimiento", "Responsable de seguimiento"),
+  f("seguimiento", "Responsable de seguimiento", { catalogo: "personal" }),
 ];
 export const documentos = [
   "Vale de Salida de Almacén",

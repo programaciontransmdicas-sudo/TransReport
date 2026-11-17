@@ -17,6 +17,7 @@ const pool = {
 };
 test("solo la IP autorizada obtiene acceso; un token y cabeceras falsas no lo conceden", async () => {
   const app = crearApp({
+    modoAcceso: "red",
     pool,
     almacen: {},
     limitar: false,
@@ -48,6 +49,7 @@ test("solo la IP autorizada obtiene acceso; un token y cabeceras falsas no lo co
     403,
   );
   const sinProxy = crearApp({
+    modoAcceso: "red",
     pool,
     almacen: {},
     limitar: false,

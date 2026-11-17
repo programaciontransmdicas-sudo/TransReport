@@ -1,3 +1,4 @@
+import Selector from "../../../components/comunes/Selector.jsx";
 import { useEffect, useState } from "react";
 import IngresoVehiculo from "./IngresoVehiculo.jsx";
 import SalidaVehiculo from "./SalidaVehiculo.jsx";
@@ -198,8 +199,8 @@ export default function ControlVehiculos({ solicitud, onBloqueo }) {
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
-            <label htmlFor="estado-filtro">Estado</label>
-            <select
+            <label id="etiqueta-estado-filtro" htmlFor="estado-filtro">Estado</label>
+            <Selector
               id="estado-filtro"
               value={estadoFiltro}
               onChange={(e) => setEstadoFiltro(e.target.value)}
@@ -207,7 +208,7 @@ export default function ControlVehiculos({ solicitud, onBloqueo }) {
               <option value="">Todos los estados</option>
               <option>En base</option>
               <option>Salida registrada</option>
-            </select>
+            </Selector>
             <button
               type="button"
               className="boton-secundario"

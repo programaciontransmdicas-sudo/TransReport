@@ -1,0 +1,27 @@
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { PGlite } from '@electric-sql/pglite';
+import express from 'express';
+import request from 'supertest';
+import { crearCatalogosRepository } from '../src/modules/catalogos/repository.js';
+import { crearCatalogosRoutes } from '../src/modules/catalogos/routes.js';
+const db = new PGlite();
+const app = express();
+app.use('/api/catalogos', (req,res,next)=>req.get('x-dispositivo') === 'autorizado' ? next() : res.sendStatus(403), crearCatalogosRoutes({ repositorioCatalogos: crearCatalogosRepository(db), logger: { error() {} } }));
+before(async()=>db.exec(`CREATE TABLE public.personal(id int, nombre_completo text, dni text, cargo text, estado text);
+CREATE TABLE public.clientes(id int, nombre text, activo boolean DEFAULT true);
+CREATE TABLE public.cliente_operaciones(id int, nombre text, cliente_id int, activo boolean DEFAULT true);
+CREATE TABLE public.vehiculos(placa text,tipo_vehiculo text,activo boolean,cliente_operacion_id int,operacion text,cliente text);
+INSERT INTO personal VALUES(1,'MENDOZA, ANA','12345678','CONDUCTOR','Activo'),(2,'MENDOZA, INACTIVO','99999999','AGENTE','Inactivo');
+INSERT INTO clientes VALUES(1,'CLIENTE UNO',true),(2,'CLIENTE BAJA',false);
+INSERT INTO cliente_operaciones VALUES(11,'MINA SUR',1,true),(12,'MINA NORTE',1,false),(13,'MINA BAJA',2,true);
+INSERT INTO vehiculos VALUES('V0T715','Tracto',true,11,'OP','CLIENTE'),('V0T716','Tracto',false,null,'OP','CLIENTE');`));
+after(async()=>db.close());
+const get=(path)=>request(app).get(path).set('x-dispositivo','autorizado');
+test('búsqueda exige un dispositivo autorizado',async()=>{assert.equal((await request(app).get('/api/catalogos/buscar/personal?q=1234')).status,403)});
+test('busca persona activa por DNI o por nombre',async()=>{let r=await get('/api/catalogos/buscar/personal?q=1234');assert.equal(r.status,200);assert.deepEqual(r.body.map(x=>x.id),[1]);assert.equal(r.body[0].dni,'12345678');r=await get('/api/catalogos/buscar/personal?q=mendoza');assert.equal(r.body.length,1)});
+test('busca placas activas sin exigir guion',async()=>{const r=await get('/api/catalogos/buscar/vehiculos?q=v0t-7');assert.deepEqual(r.body.map(x=>x.placa),['V0T715'])});
+test('limita y valida parámetros sin interpretar el texto como SQL',async()=>{assert.deepEqual((await get('/api/catalogos/buscar/personal?q=a')).body,[]);assert.equal((await get('/api/catalogos/buscar/otro?q=123')).status,400);assert.equal((await get('/api/catalogos/buscar/personal?q='+ 'a'.repeat(81))).status,400);assert.deepEqual((await get('/api/catalogos/buscar/personal?q='+encodeURIComponent("%' OR true --"))).body,[])});
+
+test('busca cliente y operación activos y permite localizar por cualquiera de los nombres',async()=>{let r=await get('/api/catalogos/buscar/operaciones?q=mina');assert.equal(r.status,200);assert.deepEqual(r.body,[{id:11,cliente:'CLIENTE UNO',operacion:'MINA SUR'}]);r=await get('/api/catalogos/buscar/operaciones?q=cliente');assert.deepEqual(r.body.map(x=>x.id),[11]);});
+test('la placa devuelve el cliente y operación asociados',async()=>{const r=await get('/api/catalogos/vehiculos/V0T715');assert.equal(r.status,200);assert.equal(r.body.vehiculo.cliente_operacion_id,11);assert.equal(r.body.vehiculo.cliente,'CLIENTE UNO');assert.equal(r.body.vehiculo.operacion,'MINA SUR');});

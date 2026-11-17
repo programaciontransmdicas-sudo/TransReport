@@ -1,3 +1,4 @@
+import Selector from "../../components/comunes/Selector.jsx";
 import { useState } from "react";
 import useRegistrosApi from "../../hooks/useRegistrosApi.js";
 import { rondas } from "../../config/camposFormularios.js";
@@ -43,8 +44,8 @@ function FormularioRonda({ control }) {
         <div className="cabecera-seccion"><h3>Antes de registrar la ronda</h3></div>
         <div className="grilla-campos-formulario">
           <div className="campo">
-            <label htmlFor="ronda-anomalias">¿Se presentaron anomalías? *</label>
-            <select
+            <label id="etiqueta-ronda-anomalias" htmlFor="ronda-anomalias">¿Se presentaron anomalías? *</label>
+            <Selector
               id="ronda-anomalias"
               value={respuesta}
               disabled={control.ocupado}
@@ -56,7 +57,7 @@ function FormularioRonda({ control }) {
               <option value="">Seleccione…</option>
               <option>Sí</option>
               <option>No</option>
-            </select>
+            </Selector>
           </div>
         </div>
       </section>

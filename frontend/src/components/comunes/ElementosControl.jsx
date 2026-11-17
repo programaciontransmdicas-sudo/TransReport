@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import Selector from "./Selector.jsx";
+import { useEffect, useRef, useState } from "react";
+import { BuscadorCatalogo, useVinculoPersona } from "../catalogos/BuscadorCatalogo.jsx";
 import { fechaLegible } from "../../utils/fechas.js";
 import { fechaLocal, fechaParaCampo } from "../../utils/registros.js";
 
@@ -94,8 +96,8 @@ export function ListaControl({
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
         />
-        <label htmlFor="filtrar-control">Estado</label>
-        <select
+        <label id="etiqueta-filtrar-control" htmlFor="filtrar-control">Estado</label>
+        <Selector
           id="filtrar-control"
           value={estado}
           onChange={(e) => setEstado(e.target.value)}
@@ -104,7 +106,7 @@ export function ListaControl({
           {(estadosPorControl[control.clave] || []).map((s) => (
             <option key={s}>{s}</option>
           ))}
-        </select>
+        </Selector>
         <button
           type="button"
           className="boton-secundario"
@@ -187,6 +189,8 @@ export function FormularioControl({
   minimos = {},
 }) {
   const [error, setError] = useState("");
+  const formulario = useRef(null);
+  const vinculoPersona = useVinculoPersona(formulario);
   async function guardar(e) {
     e.preventDefault();
     if (ocupado) return;
@@ -211,7 +215,7 @@ export function FormularioControl({
     }
   }
   return (
-    <form className="formulario" onSubmit={guardar}>
+    <form ref={formulario} className="formulario" onSubmit={guardar}>
       <fieldset
         className="formulario-habilitado campos-control"
         disabled={ocupado}
@@ -235,12 +239,12 @@ export function FormularioControl({
                   className={`campo${c.tipo === "textarea" ? " campo-amplio" : ""}`}
                   key={c.nombre}
                 >
-                  <label htmlFor={`control-${c.nombre}`}>
+                  <label id={`etiqueta-${`control-${c.nombre}`}`} htmlFor={`control-${c.nombre}`}>
                     {c.etiqueta}
                     {c.obligatorio ? " *" : ""}
                   </label>
                   {c.opciones ? (
-                    <select
+                    <Selector
                       id={`control-${c.nombre}`}
                       name={c.nombre}
                       required={c.obligatorio}
@@ -259,13 +263,25 @@ export function FormularioControl({
                       ).map((o) => (
                         <option key={o}>{o}</option>
                       ))}
-                    </select>
+                    </Selector>
                   ) : c.tipo === "textarea" ? (
                     <textarea
                       id={`control-${c.nombre}`}
                       name={c.nombre}
                       rows={3}
                       required={c.obligatorio}
+                    />
+                  ) : c.catalogo ? (
+                    <BuscadorCatalogo
+                      tipo={c.catalogo}
+                      id={`control-${c.nombre}`}
+                      name={c.nombre}
+                      required={c.obligatorio}
+                      pattern={c.patron}
+                      maxLength={c.longitud || (c.catalogo === 'vehiculos' ? 7 : 255)}
+                      inputMode={c.nombre === 'dni' ? 'numeric' : undefined}
+                      onSeleccionar={c.vincularPersona ? vinculoPersona.elegir : undefined}
+                      onEditar={c.vincularPersona ? valor => vinculoPersona.editar(c.nombre, valor) : undefined}
                     />
                   ) : (
                     <input
@@ -330,7 +346,7 @@ export function DatosControl({ registro, campos, titulo }) {
   );
 }
 export function VistaFirma({ firma, titulo = "Firma de ingreso" }) {
-  const { url, error } = useArchivoApi(firma?.archivo);
+  const { url, error, reintentar } = useArchivoApi(firma?.archivo);
   const imagen = url || (typeof firma === "string" ? firma : firma?.imagen);
   if (!firma) return <p>Firma pendiente.</p>;
   return (
@@ -340,7 +356,7 @@ export function VistaFirma({ firma, titulo = "Firma de ingreso" }) {
       {imagen ? (
         <img src={imagen} alt={titulo} />
       ) : (
-        <p role="status">{error || "Cargando firma…"}</p>
+        <div><p role="status">{error || "Cargando firma…"}</p>{error && <button type="button" className="boton-secundario" onClick={reintentar}>Reintentar</button>}</div>
       )}
     </section>
   );
@@ -368,7 +384,7 @@ export function DetalleControl({ control, campos, children }) {
 }
 
 function ArchivoVista({ archivo }) {
-  const { url, error } = useArchivoApi(archivo);
+  const { url, error, reintentar } = useArchivoApi(archivo);
   const nombre = archivo.name || archivo.nombre || "Archivo",
     tipo = archivo.type || archivo.tipo || "";
   return (

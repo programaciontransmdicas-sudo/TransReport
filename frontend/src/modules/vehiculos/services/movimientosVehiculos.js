@@ -1,4 +1,5 @@
 import { VISTAS } from "./vistasVehiculo.js";
+import { validarFecha } from '../../../utils/registros.js';
 export const normalizarPlaca = (v) =>
   String(v || "")
     .trim()
@@ -21,14 +22,21 @@ export function validarSalida(datos, ingreso) {
   )
     throw new Error("Revise el kilometraje de salida.");
   validarFotos(datos.fotos);
-  if (
-    ingreso &&
-    (datos.fecha < ingreso.fecha ||
-      Number(datos.kilometraje) < Number(ingreso.kilometraje))
-  )
+  if (ingreso) {
+  try {
+    validarFecha(datos.fecha, ingreso.fecha);
+  } catch {
     throw new Error(
       "La salida no puede ser anterior al ingreso ni tener un kilometraje menor.",
     );
+  }
+
+  if (Number(datos.kilometraje) < Number(ingreso.kilometraje)) {
+    throw new Error(
+      "La salida no puede ser anterior al ingreso ni tener un kilometraje menor.",
+    );
+  }
+}
 }
 export function registrarIngreso(filas, vehiculo) {
   if (

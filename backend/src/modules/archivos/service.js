@@ -64,50 +64,34 @@ export function exigirCamposArchivos(archivos, campos) {
     "El envío contiene archivos que no corresponden a esta operación.",
   );
 }
-export async function guardarArchivo({
-  cliente,
-  almacen,
-  tipo,
-  registroId,
-  base,
-  foto,
-  intentadas,
-}) {
-  const id = randomUUID(),
-    publicId = `transreport/adjuntos/${tipo}/${registroId}/${id}${foto.recurso === "raw" ? `.${foto.formato}` : ""}`;
-  intentadas.push({ publicId, recurso: foto.recurso });
-  try {
-    await almacen.subir(foto, publicId);
-  } catch {
-    throw Object.assign(
-      new Error("No se pudo guardar un archivo. Reintente con la misma clave."),
-      { estado: 502 },
-    );
+// Dos cargas como máximo por operación. Todas las cargas iniciadas deben terminar
+// antes del rollback y la limpieza, incluso si una de ellas falla.
+export async function guardarArchivos({ cliente, almacen, tipo, registroId, base, fotos, intentadas }) {
+  const preparados = fotos.map((foto) => {
+    const id = randomUUID();
+    const publicId = `transreport/adjuntos/${tipo}/${registroId}/${id}${foto.recurso === "raw" ? `.${foto.formato}` : ""}`;
+    return { foto, id, publicId };
+  });
+  for (let i = 0; i < preparados.length; i += 2) {
+    const lote = preparados.slice(i, i + 2);
+    for (const { foto, publicId } of lote) intentadas.push({ publicId, recurso: foto.recurso });
+    const resultados = await Promise.allSettled(lote.map(({ foto, publicId }) => almacen.subir(foto, publicId)));
+    if (resultados.some((r) => r.status === "rejected")) {
+      throw Object.assign(new Error("No se pudo guardar un archivo. Reintente con la misma clave."), { estado: 502 });
+    }
   }
-  await insertarArchivo(cliente, [
-    id,
-    tipo,
-    registroId,
-    base,
-    foto.nombre,
-    publicId,
-    foto.recurso,
-    foto.formato,
-    foto.mime,
-    foto.bytes,
-  ]);
-
-  return {
-    publicId,
-    referencia: {
-      id,
-      nombre: foto.nombre,
-      tipo: foto.mime,
-      formato: foto.formato,
-      bytes: foto.bytes,
-      url: `/api/archivos/${id}`,
-    },
-  };
+  const resultado = [];
+  // El cliente PostgreSQL se utiliza en secuencia, nunca desde promesas concurrentes.
+  for (const { foto, id, publicId } of preparados) {
+    await insertarArchivo(cliente, [id, tipo, registroId, base, foto.nombre, publicId,
+      foto.recurso, foto.formato, foto.mime, foto.bytes]);
+    resultado.push({ publicId, referencia: { id, nombre: foto.nombre, tipo: foto.mime,
+      formato: foto.formato, bytes: foto.bytes, url: `/api/archivos/${id}` } });
+  }
+  return resultado;
+}
+export async function guardarArchivo({ foto, ...opciones }) {
+  return (await guardarArchivos({ ...opciones, fotos: [foto] }))[0];
 }
 
 export function crearAdjuntador(almacen) {

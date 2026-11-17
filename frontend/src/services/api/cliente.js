@@ -1,6 +1,7 @@
 import { nuevoId } from "../../utils/identificador.js";
 import { leerConfiguracion } from "./configuracion.js";
 import { pendientes } from "./pendientes.js";
+import { comprimirImagen } from "./comprimirImagen.js";
 export const EVENTO_DATOS = "transreport-api-datos";
 export const EVENTO_ACCESO = "transreport-acceso-cambio";
 export const EVENTO_ENVIO = "transreport-api-envio";
@@ -22,6 +23,8 @@ export function crearCliente({
   transporte = (...args) => fetch(...args),
   cola = pendientes,
   notificarCambio = notificar,
+  reintentos = 1,
+  esperar = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 } = {}) {
   let enviando = false;
   function config() {
@@ -43,7 +46,7 @@ export function crearCliente({
     try {
       respuesta = await transporte(c.servidor + ruta, {
         ...opciones,
-        credentials: "omit",
+        credentials: "same-origin",
         cache: "no-store",
         redirect: "error",
         headers: { ...opciones.headers },
@@ -72,7 +75,7 @@ export function crearCliente({
             ? 'El servidor no confirmó el guardado. Se conserva el envío; use Recuperar envío.'
             : 'El servidor no está disponible temporalmente. Intente nuevamente en unos segundos.'
           : "No se pudo completar la operación.")) +
-          (detalle ? ` (${detalle})` : ""),
+        (detalle ? ` (${detalle})` : ""),
         respuesta.status,
       );
     }
@@ -110,12 +113,24 @@ export function crearCliente({
       if (
         e.estado >= 400 &&
         e.estado < 500 &&
-        ![401, 403, 408, 429].includes(e.estado)
+        ![401, 403, 408, 410, 429].includes(e.estado)
       )
         await cola.quitar(envio.clave);
       throw e;
     } finally {
       notificarCambio(EVENTO_ENVIO);
+    }
+  }
+  async function ejecutarConReintento(envio) {
+    for (let intento = 0; ; intento++) {
+      try {
+        return await ejecutar(envio);
+      } catch (error) {
+        const temporal = error instanceof ErrorApi &&
+          [0, 408, 429, 502, 503, 504].includes(error.estado);
+        if (!temporal || intento >= reintentos) throw error;
+        await esperar(2000 * (intento + 1));
+      }
     }
   }
   return {
@@ -130,18 +145,20 @@ export function crearCliente({
         const c = config();
         if (!c.dispositivo?.id)
           throw new ErrorApi("El equipo aún no está autorizado.", 403);
+        const archivosPreparados = [];
+        for (const archivo of archivos) archivosPreparados.push(await comprimirImagen(archivo));
         const envio = {
           clave: nuevoId(),
           ruta,
           datos: structuredClone(datos),
-          archivos,
+          archivos: archivosPreparados,
           servidor: c.servidor,
           dispositivo: c.dispositivo.id,
           fecha: new Date().toISOString(),
         };
         await cola.reservar(envio);
         notificarCambio(EVENTO_ENVIO);
-        return await ejecutar(envio);
+        return await ejecutarConReintento(envio);
       } finally {
         enviando = false;
       }
@@ -152,10 +169,28 @@ export function crearCliente({
       enviando = true;
       try {
         const envio = await cola.leer();
-        return envio ? await ejecutar(envio) : null;
+        return envio ? await ejecutarConReintento(envio) : null;
       } finally {
         enviando = false;
       }
+    },
+    async habilitar(codigo) {
+      if (enviando) {
+        throw new ErrorApi("Espera a que termine el envío.");
+      }
+
+      const respuesta = await pedir(
+        "/api/acceso/habilitar",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ codigo }),
+        },
+      );
+
+      return respuesta.json();
     },
     pendiente: () => cola.leer(),
     ocupado: () => enviando,

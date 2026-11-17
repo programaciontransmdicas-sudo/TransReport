@@ -3,7 +3,6 @@ import Cabecera from "../components/layout/Cabecera.jsx";
 import ControlVehiculos from "../modules/vehiculos/components/ControlVehiculos.jsx";
 import PersonalPanel from "../modules/personal/PersonalPanel.jsx";
 import RondasPanel from "../modules/rondas/RondasPanel.jsx";
-import LlavesPanel from "../modules/llaves/LlavesPanel.jsx";
 import RelevosTurno from "../modules/relevos/RelevosTurno.jsx";
 import InicioApp, {
   TarjetasControles,
@@ -18,7 +17,6 @@ const paneles = {
   vehiculos: ControlVehiculos,
   personal: PersonalPanel,
   rondas: RondasPanel,
-  llaves: LlavesPanel,
   relevos: RelevosTurno,
 };
 export default function App() {

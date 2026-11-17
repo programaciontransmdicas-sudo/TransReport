@@ -55,7 +55,8 @@ export default function ConexionTablet({ children }) {
     window.addEventListener(EVENTO_ENVIO, envios);
     window.addEventListener(EVENTO_ACCESO, comprobar);
     window.addEventListener("online", comprobar);
-    document.addEventListener("visibilitychange", visible);
+        document.addEventListener("visibilitychange", visible);
+
     return () => {
       activo.current = false;
       window.removeEventListener(EVENTO_ENVIO, envios);
@@ -64,6 +65,30 @@ export default function ConexionTablet({ children }) {
       document.removeEventListener("visibilitychange", visible);
     };
   }, []);
+
+  async function habilitar(evento) {
+    evento.preventDefault();
+
+    const formulario = evento.currentTarget;
+
+    const codigo = String(
+      new FormData(formulario).get("codigoHabilitacion") || "",
+    ).trim();
+
+    setOcupado(true);
+    setError("");
+
+    try {
+      await api.habilitar(codigo);
+      formulario.reset();
+      await comprobar();
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setOcupado(false);
+    }
+  }
+
   async function recuperar() {
     setOcupado(true);
     setError("");
@@ -95,10 +120,44 @@ export default function ConexionTablet({ children }) {
               : "Conectando con tu puesto…"}
           </h2>
           <p>
-            {acceso && !acceso.autorizado
-              ? "Este equipo todavía no está autorizado para usar TransReport. Solicita al administrador que lo habilite en la red de la empresa."
-              : "La app identifica automáticamente el equipo y su base."}
-          </p>
+  {acceso && !acceso.autorizado
+    ? acceso.modo === "credencial"
+      ? "Solicita al administrador un código e ingrésalo aquí una sola vez para habilitar este navegador."
+      : "Solicita al administrador que habilite este equipo en la red."
+    : "Comprobando la autorización del equipo…"}
+</p>
+{acceso?.modo === "credencial" && (
+  <form
+    className="formulario habilitacion-equipo"
+    onSubmit={habilitar}
+  >
+    <label htmlFor="codigo-habilitacion">
+      Código de habilitación
+    </label>
+
+    <input
+      id="codigo-habilitacion"
+      name="codigoHabilitacion"
+      required
+      minLength={43}
+      maxLength={43}
+      autoComplete="off"
+      autoCapitalize="none"
+      spellCheck={false}
+      disabled={ocupado}
+    />
+
+    <button
+      type="submit"
+      className="boton-principal"
+      disabled={ocupado}
+    >
+      {ocupado
+        ? "Habilitando…"
+        : "Habilitar este equipo"}
+    </button>
+  </form>
+)}
           {acceso?.ip && (
             <details>
               <summary>Información para el administrador</summary>

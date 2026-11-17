@@ -7,6 +7,23 @@ import { crearAlmacenCloudinary } from "./src/services/cloudinaryService.js";
 import { comprobarArranque } from "./src/services/arranqueService.js";
 import { isIP } from "node:net";
 console.log("Conectando a PostgreSQL…");
+const modoAcceso =
+  process.env.ACCESO_DISPOSITIVOS || "credencial";
+
+const cookieSegura =
+  process.env.NODE_ENV === "production";
+
+if (!["credencial", "red"].includes(modoAcceso)) {
+  throw new Error(
+    "ACCESO_DISPOSITIVOS debe ser credencial o red.",
+  );
+}
+
+if (cookieSegura && modoAcceso !== "credencial") {
+  throw new Error(
+    "En producción debe utilizarse el acceso por credencial.",
+  );
+}
 try {
   await comprobarArranque(pool);
 } catch (error) {
@@ -39,6 +56,8 @@ const app = crearApp({
   almacen: crearAlmacenCloudinary(cloudinary),
   origenes,
   trustProxy: ["loopback", ...proxies],
+  modoAcceso,
+cookieSegura,
 });
 const server = app.listen(puerto, "0.0.0.0", () =>
   console.log(`Backend disponible en puerto ${puerto}`),

@@ -1,6 +1,9 @@
+import { useOperacionVehiculo } from "../../../components/catalogos/useOperacionVehiculo.js";
+import Selector from "../../../components/comunes/Selector.jsx";
 import { nuevoId } from "../../../utils/identificador.js";
 import { useRef, useState } from "react";
 import FotosVehiculo, { VISTAS } from "./FotosVehiculo.jsx";
+import { BuscadorCatalogo, useVinculoPersona } from "../../../components/catalogos/BuscadorCatalogo.jsx";
 
 import { leerConfiguracion } from "../../../services/api/configuracion.js";
 const campos = [
@@ -59,7 +62,7 @@ const campos = [
   },
   {
     nombre: "operacion",
-    etiqueta: "Operación",
+    etiqueta: "Cliente / Operación",
     obligatorio: true,
   },
   {
@@ -96,6 +99,9 @@ function formatearPlaca(valor) {
 
 function IngresoVehiculo({ onGuardar, onVolver }) {
   const id = useRef(nuevoId());
+  const formulario = useRef(null);
+  const vinculoConductor = useVinculoPersona(formulario, 'conductor', 'dni');
+  const vinculoOperacion = useOperacionVehiculo(formulario);
   const [fotos, setFotos] = useState({});
   const [error, setError] = useState("");
 
@@ -132,6 +138,7 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
 
     onGuardar({
       ...datos,
+      ...(formulario.get("clienteOperacionId") ? { clienteOperacionId: Number(formulario.get("clienteOperacionId")) } : {}),
       id: id.current,
       placa: formatearPlaca(datos.placa),
       carreta: formatearPlaca(datos.carreta),
@@ -153,7 +160,8 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
       <h2>Ingreso de vehículo</h2>
       <p className="nota-formulario">Los campos con * son obligatorios.</p>
 
-      <form className="formulario" onSubmit={guardar}>
+      <form ref={formulario} className="formulario" onSubmit={guardar}>
+        <input type="hidden" name="clienteOperacionId" />
         {[
           {
             titulo: "Unidad y conductor",
@@ -198,13 +206,13 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
 
                   return (
                     <div className="campo" key={campo.nombre}>
-                      <label htmlFor={campo.nombre}>
+                      <label id={`etiqueta-${campo.nombre}`} htmlFor={campo.nombre}>
                         {campo.etiqueta}
                         {campo.obligatorio ? " *" : ""}
                       </label>
 
                       {campo.opciones ? (
-                        <select
+                        <Selector
                           id={campo.nombre}
                           name={campo.nombre}
                           required={campo.obligatorio}
@@ -224,7 +232,22 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
                               {opcion}
                             </option>
                           ))}
-                        </select>
+                        </Selector>
+                      ) : campo.nombre === 'operacion' ? (
+                        <BuscadorCatalogo tipo="operaciones" id={campo.nombre} name={campo.nombre} required
+                          onSeleccionar={vinculoOperacion.elegirOperacion} onEditar={vinculoOperacion.editarOperacion} />
+                      ) : ['placa', 'carreta', 'conductor', 'dni'].includes(campo.nombre) ? (
+                        <BuscadorCatalogo
+                          tipo={esPlaca ? 'vehiculos' : 'personal'}
+                          id={campo.nombre}
+                          name={campo.nombre}
+                          required={campo.obligatorio}
+                          pattern={esPlaca ? "[A-Za-z0-9]{3}-?[A-Za-z0-9]{3}" : campo.patron}
+                          maxLength={esPlaca ? 7 : campo.longitud || 255}
+                          inputMode={campo.nombre === 'dni' ? 'numeric' : undefined}
+                          onSeleccionar={campo.nombre === 'placa' ? vinculoOperacion.elegirPlaca : !esPlaca ? vinculoConductor.elegir : undefined}
+                          onEditar={campo.nombre === 'placa' ? vinculoOperacion.editarPlaca : !esPlaca ? valor => vinculoConductor.editar(campo.nombre, valor) : undefined}
+                        />
                       ) : (
                         <input
                           id={campo.nombre}
@@ -268,14 +291,14 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
         </fieldset>
 
         <div className="campo">
-          <label htmlFor="precintos">
+          <label id="etiqueta-precintos" htmlFor="precintos">
             Precintos y materiales transportados
           </label>
           <textarea id="precintos" name="precintos" rows={3} />
         </div>
 
         <div className="campo">
-          <label htmlFor="observaciones">Observaciones</label>
+          <label id="etiqueta-observaciones" htmlFor="observaciones">Observaciones</label>
           <textarea id="observaciones" name="observaciones" rows={3} />
         </div>
 

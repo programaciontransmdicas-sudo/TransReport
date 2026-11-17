@@ -1,7 +1,9 @@
 import express from "express";
 import helmet from "helmet";
 import cors from "cors";
-import rateLimit from "express-rate-limit";
+import rateLimit, {
+  ipKeyGenerator,
+} from "express-rate-limit";
 import { ErrorHttp } from "./utils/ErrorHttp.js";
 import { autenticarDispositivo } from "./middlewares/auth.js";
 import { crearCarga } from "./middlewares/carga.js";
@@ -34,11 +36,31 @@ export function crearApp({
   origenes = ["http://localhost:5173", "http://127.0.0.1:5173"],
   trustProxy = false,
   limitar = true,
+  esperaCargaMs = 15000,
+  modoAcceso = "credencial",
+cookieSegura = false,
 }) {
+  if (!["credencial", "red"].includes(modoAcceso)) {
+  throw new Error(
+    "ACCESO_DISPOSITIVOS debe ser credencial o red.",
+  );
+}
   const app = express();
   // Una sola cuota de subidas simultáneas para todos los módulos.
-  const deps = { pool, almacen, logger, carga: crearCarga() };
-  const auth = autenticarDispositivo(pool);
+const deps = {
+  pool,
+  almacen,
+  logger,
+  carga: crearCarga({ esperaMs: esperaCargaMs }),
+  modoAcceso,
+  cookieSegura,
+  limitar,
+};
+
+const auth = autenticarDispositivo(pool, {
+  modoAcceso,
+  cookieSegura,
+});
   app.disable("x-powered-by");
   app.set("trust proxy", trustProxy);
   app.use(helmet());
@@ -58,11 +80,32 @@ export function crearApp({
       exposedHeaders: ["Idempotency-Replayed", "X-Request-Id"],
     }),
   );
+  app.use((req, res, next) => {
+  const modificaDatos = !["GET", "HEAD", "OPTIONS"].includes(
+    req.method,
+  );
+
+  if (
+    modoAcceso === "credencial" &&
+    modificaDatos &&
+    !origenes.includes(req.get("origin"))
+  ) {
+    return next(
+      new ErrorHttp(
+        403,
+        "La operación debe iniciarse desde la dirección autorizada de TransReport.",
+      ),
+    );
+  }
+
+  next();
+});
   if (limitar)
     app.use(
       ["/api", "/health/db"],
       rateLimit({
         windowMs: 60000,
+        keyGenerator: (req) => ipKeyGenerator(req.ip),
         limit: 180,
         standardHeaders: "draft-8",
         legacyHeaders: false,

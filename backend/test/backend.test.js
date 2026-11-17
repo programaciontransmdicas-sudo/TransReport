@@ -66,13 +66,14 @@ async function tomar() {
 before(async () => {
   db = new PGlite();
   await db.waitReady;
-  await db.exec(`CREATE TABLE public.clientes(id integer PRIMARY KEY,nombre text);
+  await db.exec(`CREATE TABLE public.clientes(id integer PRIMARY KEY,nombre text,activo boolean DEFAULT true);
     CREATE TABLE public.cliente_operaciones(id integer PRIMARY KEY,cliente_id integer REFERENCES public.clientes(id),nombre text,activo boolean DEFAULT true);
     CREATE TABLE public.vehiculos(placa varchar PRIMARY KEY,tipo_vehiculo text,activo boolean DEFAULT true,cliente_operacion_id integer REFERENCES public.cliente_operaciones(id),operacion text,cliente text);
     CREATE TABLE public.personal(id integer PRIMARY KEY,dni text UNIQUE,nombre_completo text);
     INSERT INTO public.clientes VALUES(1,'Cliente');INSERT INTO public.cliente_operaciones VALUES(1,1,'Operación',true);
     INSERT INTO public.vehiculos(placa,tipo_vehiculo,cliente_operacion_id) VALUES('B6Z714','Tracto',1);
-    INSERT INTO public.personal VALUES(1,'12345678','PERSONAL DEL ERP');`);
+    INSERT INTO public.personal VALUES(1,'12345678','PERSONAL DEL ERP');
+    ALTER TABLE public.personal ADD COLUMN estado text DEFAULT 'Activo', ADD COLUMN cargo text DEFAULT 'Conductor';`);
   const query = async (sql, params) => {
     if (fallarEvento && sql.startsWith("INSERT INTO transreport.eventos"))
       throw new Error("Fallo SQL simulado");
@@ -100,7 +101,7 @@ before(async () => {
       }
     },
   };
-  assert.equal((await aplicarMigraciones(pool)).length, 5);
+  assert.equal((await aplicarMigraciones(pool)).length, 7);
   assert.equal((await aplicarMigraciones(pool)).length, 0);
   for (const [ip, base, activo] of [
     [ipA, "Peruarbo", true],
@@ -112,6 +113,7 @@ before(async () => {
       [randomUUID(), "Tablet", base, hash(ip), activo, ip],
     );
   app = crearApp({
+    modoAcceso: "red",
     trustProxy: "loopback",
     pool,
     almacen,
@@ -226,6 +228,12 @@ test("Backend completo de TransReport", async (t) => {
       .set("Origin", "http://localhost:5173")
       .set("Access-Control-Request-Method", "POST");
     assert.equal(pre.status, 204);
+    assert.equal((await request(app).get('/api/catalogos/buscar/personal?q=1234')).status, 403);
+    const sugerencias = await obtener('/catalogos/buscar/personal?q=1234');
+    assert.equal(sugerencias.status, 200);
+    assert.equal(sugerencias.body[0].dni, '12345678');
+    const placas = await obtener('/catalogos/buscar/vehiculos?q=b6z-7');
+    assert.equal(placas.body[0].placa, 'B6Z714');
     const r = await obtener("/catalogos/vehiculos/b6z-714");
     assert.equal(r.status, 200);
     assert.equal(r.body.vehiculo.cliente, "Cliente");
@@ -1018,6 +1026,12 @@ test("Backend completo de TransReport", async (t) => {
       assert.equal(intentos, subidas);
     },
   );
+  await t.test("el ingreso guarda el ID de cliente / operación seleccionado", async () => {
+    const r = await enviar("/vehiculos/ingresos", ingreso("OPR123", { operacion: "Cliente - Operación", clienteOperacionId: 1 }), { archivos: cinco() });
+    assert.equal(r.status, 201);
+    const filas = await pool.query("SELECT cliente_operacion_id FROM transreport.controles_vehiculos WHERE placa=$1", ["OPR123"]);
+    assert.equal(filas.rows[0].cliente_operacion_id, 1);
+  });
   await t.test(
     "fallo de limpieza se registra sin perder el error original",
     async () => {

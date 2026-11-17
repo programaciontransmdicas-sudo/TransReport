@@ -46,7 +46,7 @@ before(async () => {
   db = new PGlite();
   await db.waitReady;
   await db.exec(
-    `CREATE TABLE public.clientes(id integer PRIMARY KEY,nombre text);CREATE TABLE public.cliente_operaciones(id integer PRIMARY KEY,cliente_id integer,nombre text,activo boolean);CREATE TABLE public.vehiculos(placa varchar PRIMARY KEY,tipo_vehiculo text,activo boolean,cliente_operacion_id integer,operacion text,cliente text);CREATE TABLE public.personal(id integer PRIMARY KEY,dni text UNIQUE,nombre_completo text);`,
+    `CREATE TABLE public.clientes(id integer PRIMARY KEY,nombre text,activo boolean DEFAULT true);CREATE TABLE public.cliente_operaciones(id integer PRIMARY KEY,cliente_id integer,nombre text,activo boolean);CREATE TABLE public.vehiculos(placa varchar PRIMARY KEY,tipo_vehiculo text,activo boolean,cliente_operacion_id integer,operacion text,cliente text);CREATE TABLE public.personal(id integer PRIMARY KEY,dni text UNIQUE,nombre_completo text);`,
   );
   let previa = Promise.resolve();
   async function tomar() {
@@ -92,6 +92,7 @@ before(async () => {
     abrir: async (f) => Readable.from([objetos.get(f.public_id)]),
   };
   const app = crearApp({
+    modoAcceso: "red",
     trustProxy: "loopback",
     pool,
     almacen,
@@ -107,6 +108,7 @@ before(async () => {
   };
   cola = memoria();
   cliente = crearCliente({
+    reintentos: 0,
     configuracion: () => config,
     cola,
     transporte: (url, options) => {
@@ -376,6 +378,7 @@ test("reintento tras respuesta perdida usa la misma clave y fotos, incluso con o
     return r;
   };
   const c = crearCliente({
+    reintentos: 0,
     configuracion: () => config,
     cola: outbox,
     transporte,
@@ -397,6 +400,7 @@ test("reintento tras respuesta perdida usa la misma clave y fotos, incluso con o
     /pendiente/,
   );
   const reabierto = crearCliente({
+    reintentos: 0,
     configuracion: () => config,
     cola: outbox,
     transporte,
@@ -411,6 +415,7 @@ test("errores definitivos liberan borrador; credencial revocada y red conservan 
   for (const status of [401, 422, 503]) {
     const q = memoria(),
       c = crearCliente({
+    reintentos: 0,
         configuracion: () => config,
         cola: q,
         transporte: async () =>
@@ -422,6 +427,7 @@ test("errores definitivos liberan borrador; credencial revocada y red conservan 
   }
   let peticiones = 0;
   const c = crearCliente({
+    reintentos: 0,
     configuracion: () => config,
     cola: memoria(),
     transporte: async () => {
@@ -451,6 +457,7 @@ test("recuperación multipart conserva los bytes y no vuelve a subir una foto ac
     return r;
   };
   const opciones = {
+    reintentos: 0,
     configuracion: () => config,
     cola: q,
     transporte,
@@ -481,6 +488,32 @@ test("recuperación multipart conserva los bytes y no vuelve a subir una foto ac
   const registro = await crearCliente(opciones).recuperar();
   assert.equal(registro.evidencias.length, 1);
   assert.equal(objetos.size, antes + 1);
+  assert.equal(claves[0], claves[1]);
+  assert.equal(await q.leer(), null);
+});
+
+test('respuesta perdida se recupera automáticamente sin duplicar registro ni foto', async () => {
+  const q = memoria(), claves = [];
+  let cortar = true;
+  const transporte = async (url, o) => {
+    claves.push(o.headers['Idempotency-Key']);
+    const respuesta = await fetch(url, {
+      ...o,
+      headers: { ...o.headers, 'X-Forwarded-For': '192.168.10.20' },
+    });
+    if (cortar) { cortar = false; throw new TypeError('Respuesta perdida'); }
+    return respuesta;
+  };
+  const c = crearCliente({ configuracion: () => config, cola: q, transporte,
+    notificarCambio() {}, esperar: async () => {} });
+  const antes = objetos.size;
+  const registro = await c.enviar('/api/rondas', {
+    base: 'Peruarbo', fecha: '2026-10-27T08:00', fin: '2026-10-27T09:00',
+    nombre: 'RONDA AUTO', tipo: 'Programada', turno: 'Día', zona: 'Base', hallazgos: 'Conforme',
+  }, [{ campo: 'evidencias', blob: foto(), nombre: 'foto.png' }]);
+  assert.equal(registro.evidencias.length, 1);
+  assert.equal(objetos.size, antes + 1);
+  assert.equal(claves.length, 2);
   assert.equal(claves[0], claves[1]);
   assert.equal(await q.leer(), null);
 });

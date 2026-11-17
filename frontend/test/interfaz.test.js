@@ -61,7 +61,7 @@ globalThis.fetch = async (url, o = {}) => {
     });
   if (tipo === "dispositivo") return respuesta({ dispositivo });
   assert.ok(
-    !["terceros", "activos"].includes(tipo),
+    !["terceros", "activos", "llaves"].includes(tipo),
     "La app no debe consultar los módulos reservados para el ERP",
   );
   if (tipo === "resumen")
@@ -172,7 +172,7 @@ test("acceso automático sin token, formularios y recuperación persistente", as
   assert.equal(document.querySelector('[name="servidor"]'), null);
   assert.match(document.body.textContent, /Buen día, vigilante/);
   assert.match(document.body.textContent, /Tablet de prueba · Peruarbo/);
-  assert.doesNotMatch(document.body.textContent, /Terceros|Activos/);
+  assert.doesNotMatch(document.body.textContent, /Terceros|Activos|Llaves/);
   await abrirControl("Personal");
   await pulsar("Registrar ingreso");
   assert.equal(document.querySelector('[name="base"]').value, "Peruarbo");
@@ -191,7 +191,6 @@ test("acceso automático sin token, formularios y recuperación persistente", as
   await pulsar("Volver");
   await pulsar("Inicio");
   for (const [nombre, nuevo] of [
-    ["Llaves", "Registrar recojo"],
     ["Relevos", "Registrar relevo"],
     ["Rondas", "Registrar ronda"],
   ]) {
@@ -248,7 +247,7 @@ test("acceso automático sin token, formularios y recuperación persistente", as
     await pulsar("Inicio");
   }
   await pulsar("Movimientos");
-  assert.doesNotMatch(document.body.textContent, /Terceros|Activos/);
+  assert.doesNotMatch(document.body.textContent, /Terceros|Activos|Llaves/);
   await pulsar("Inicio");
   await abrirControl("Vehículos");
   await pulsar("Registrar ingreso");
