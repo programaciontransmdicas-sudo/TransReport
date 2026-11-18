@@ -75,7 +75,9 @@ export function crearCliente({
             ? 'El servidor no confirmó el guardado. Se conserva el envío; use Recuperar envío.'
             : 'El servidor no está disponible temporalmente. Intente nuevamente en unos segundos.'
           : "No se pudo completar la operación.")) +
-        (detalle ? ` (${detalle})` : ""),
+        (detalle ? ` (${detalle})` : "") +
+        (respuesta.status >= 500 && /^[a-f0-9-]{36}$/i.test(fallo.solicitudId || "")
+          ? ` (Referencia: ${fallo.solicitudId})` : ""),
         respuesta.status,
       );
     }
@@ -161,6 +163,7 @@ export function crearCliente({
         return await ejecutarConReintento(envio);
       } finally {
         enviando = false;
+        notificarCambio(EVENTO_ENVIO);
       }
     },
     async recuperar() {
@@ -172,6 +175,7 @@ export function crearCliente({
         return envio ? await ejecutarConReintento(envio) : null;
       } finally {
         enviando = false;
+        notificarCambio(EVENTO_ENVIO);
       }
     },
     async habilitar(codigo) {

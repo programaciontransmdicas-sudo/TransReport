@@ -1,0 +1,27 @@
+/* Medidas comunes para acciones principales y secundarias en todos los módulos. */
+.aplicacion .boton-principal,
+.aplicacion .boton-secundario {
+  box-sizing: border-box;
+  min-height: 48px;
+  min-width: 140px;
+  padding: 11px 18px;
+  border-radius: 12px;
+  font-size: 13px;
+  line-height: 1.3;
+  text-align: center;
+}
+.aplicacion .panel-control > .boton-secundario,
+.aplicacion .movimiento-app footer .boton-principal,
+.aplicacion .acciones-tarjeta .boton-principal,
+.aplicacion .acciones-tarjeta .boton-secundario {
+  min-height: 48px;
+  padding: 11px 18px;
+  font-size: 13px;
+}
+.aplicacion .personal-acciones { align-items: stretch; }
+.aplicacion .personal-acciones > .boton-principal,
+.aplicacion .personal-acciones > .boton-secundario { flex: 0 1 180px; margin-top: 0; }
+@media (max-width: 480px) {
+  .aplicacion .personal-acciones > .boton-principal,
+  .aplicacion .personal-acciones > .boton-secundario { flex: 1 1 140px; }
+}

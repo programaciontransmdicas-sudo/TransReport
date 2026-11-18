@@ -7,6 +7,7 @@ export default function useResumenApp() {
     [firmas, setFirmas] = useState({ registros: [], siguiente: null }),
     [contadores, setContadores] = useState({
       vehiculosEnBase: 0,
+      personasEnBase: null,
       firmasPendientes: 0,
     }),
     [cargado, setCargado] = useState(false),
@@ -17,9 +18,8 @@ export default function useResumenApp() {
   async function recargar() {
     const turno = ++secuencia.current;
     try {
-      const [resumen, pendientes, listas] = await Promise.all([
+      const [resumen, listas] = await Promise.all([
         api.obtener("/api/resumen"),
-        api.obtener("/api/firmas/pendientes?limite=30"),
         Promise.all(
           controles.map(async (control) => ({
             control,
@@ -29,7 +29,6 @@ export default function useResumenApp() {
       ]);
       if (activo.current && turno === secuencia.current) {
         setGrupos(listas);
-        setFirmas(pendientes);
         setContadores(resumen);
         setCargado(true);
         setError("");
@@ -123,6 +122,7 @@ export default function useResumenApp() {
       registro,
     })),
     enBase: contadores.vehiculosEnBase,
+    personasEnBase: contadores.personasEnBase ?? null,
     totalFirmas: contadores.firmasPendientes,
     cargado,
     error,

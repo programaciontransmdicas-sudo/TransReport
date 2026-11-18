@@ -11,6 +11,6 @@ export const relevo = z
     movimientos: texto,
     equipos: texto,
     acciones: texto,
-    observaciones: texto,
+    observaciones: opcional,
   })
   .strict();

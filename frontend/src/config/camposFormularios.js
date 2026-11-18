@@ -63,15 +63,32 @@ export const terceros = [
 export const relevo = [
   f("nombre", "Nombres y apellidos", { obligatorio: true, catalogo: "personal" }),
   f("pendientesAnterior", "Pendientes", {
-    tipo: "textarea",
+    opciones: ["Sin pendientes", "Seguimiento de un ingreso", "Verificación de instalaciones"],
     obligatorio: true,
+    ayuda: "Opciones de ejemplo; se definirán en Configuración.",
   }),
-  f("novedades", "Novedades del turno"),
-  f("incidentes", "Incidentes y ocurrencias", { obligatorio: true }),
-  f("movimientos", "Visitas y movimientos relevantes", { obligatorio: true }),
-  f("equipos", "Equipos y medios de seguridad", { obligatorio: true }),
+  f("novedades", "Novedades del turno", {
+    opciones: ["Sin novedades", "Cambio de personal", "Novedad en instalaciones"],
+    ayuda: "Opciones de ejemplo; se definirán en Configuración.",
+  }),
+  f("incidentes", "Incidentes y ocurrencias", {
+    opciones: ["Sin incidentes", "Incidente de seguridad", "Ocurrencia por investigar"],
+    obligatorio: true,
+    ayuda: "Opciones de ejemplo; se definirán en Configuración.",
+  }),
+  f("movimientos", "Visitas y movimientos relevantes", {
+    opciones: ["Sin visitas ni movimientos relevantes", "Visita de proveedor", "Visita de servicio técnico", "Ingreso de visitante"],
+    obligatorio: true,
+    ayuda: "Opciones de ejemplo; se definirán en Configuración.",
+  }),
+  f("equipos", "Equipos y medios de seguridad", {
+    tipo: "checklist",
+    opciones: ["Radio de comunicación", "Linterna", "Chaleco reflectivo", "Botiquín", "Ninguno entregado"],
+    opcionExclusiva: "Ninguno entregado",
+    obligatorio: true,
+    ayuda: "Seleccione los equipos entregados. Lista de ejemplo, pendiente de confirmar.",
+  }),
   f("acciones", "Acciones pendientes", { tipo: "textarea", obligatorio: true }),
-  f("observaciones", "Observaciones adicionales", { obligatorio: true }),
 ];
 export const llavesRecojo = [
   ...comun(),

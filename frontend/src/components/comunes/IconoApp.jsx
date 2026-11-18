@@ -9,6 +9,7 @@ const trazos = {
   inicio: "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
   agregar: "M12 5v14 M5 12h14",
   movimientos: "M3 12a9 9 0 119 9 M3 4v8h8 M12 7v5l4 2",
+  configuracion: "M12 2v3 M12 19v3 M2 12h3 M19 12h3 M4.9 4.9l2.1 2.1 M17 17l2.1 2.1 M19.1 4.9 17 7 M7 17l-2.1 2.1 M16 12a4 4 0 11-8 0 4 4 0 018 0",
   firma: "M5 17l1-5L17 1l5 5-11 11z M3 21h18 M14 4l5 5",
   flecha: "M5 12h14 M14 7l5 5-5 5",
   camion:

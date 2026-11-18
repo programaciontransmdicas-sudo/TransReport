@@ -51,7 +51,7 @@ export default function useRegistrosApi(clave, onBloqueo, solicitud) {
     };
   }, [recargar]);
   useEffect(() => {
-    onBloqueo?.(ocupado || ["nuevo", "cierre", "firma"].includes(vista));
+    onBloqueo?.(ocupado || ["nuevo", "ingresos", "cierre", "firma"].includes(vista));
     return () => onBloqueo?.(false);
   }, [ocupado, vista, onBloqueo]);
   const abrir = useCallback(
@@ -132,6 +132,18 @@ export default function useRegistrosApi(clave, onBloqueo, solicitud) {
     setMensaje("");
     recargar();
   }
+  useEffect(() => {
+    if (vista === 'lista') return;
+    const manejar = evento => {
+      evento.detail.atendido = true;
+      if (ocupado || guardando.current) return;
+      if (['nuevo', 'ingresos', 'cierre', 'firma'].includes(vista) &&
+          !window.confirm('¿Desea salir? Los datos que aún no guardó se perderán.')) return;
+      volver();
+    };
+    window.addEventListener('transreport-retroceder', manejar);
+    return () => window.removeEventListener('transreport-retroceder', manejar);
+  }, [vista, ocupado]);
   async function cargarMas() {
     if (!siguiente || ocupado) return;
     const turno = secuencia.current;

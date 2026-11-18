@@ -1,0 +1,7 @@
+.lista-verificacion { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:10px; }
+.lista-verificacion .lista-verificacion-opcion { display:flex; align-items:center; gap:12px; min-height:50px; padding:12px; border:1px solid #e5e4f0; border-radius:12px; background:#fafafe; color:#263953; font-size:14px; font-weight:500; cursor:pointer; }
+.lista-verificacion .lista-verificacion-opcion:has(input:checked) { background:#f2efff; border-color:#9786e9; color:#5540b2; }
+.lista-verificacion input[type="checkbox"] { width:20px; height:20px; flex:none; margin:0; accent-color:#7057ed; }
+.lista-verificacion input[type="checkbox"]:focus-visible { outline:2px solid #7057ed; outline-offset:2px; }
+.lista-verificacion-opcion span { overflow-wrap:anywhere; }
+.panel-control[data-control="relevos"] .datos-detalle dd { white-space:pre-line; }

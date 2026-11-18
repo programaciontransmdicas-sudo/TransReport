@@ -1,3 +1,4 @@
+import { useCatalogos } from "../../configuracion/catalogo.js";
 import { useOperacionVehiculo } from "../../../components/catalogos/useOperacionVehiculo.js";
 import Selector from "../../../components/comunes/Selector.jsx";
 import { nuevoId } from "../../../utils/identificador.js";
@@ -8,6 +9,7 @@ import { leerConfiguracion } from "../../../services/api/configuracion.js";
 import { mostrarPlaca } from "../services/movimientosVehiculos.js";
 import { fechaLocal, fechaParaCampo } from "../../../utils/registros.js";
 export default function SalidaVehiculo({ vehiculo, onGuardar, onVolver }) {
+  const catalogos = useCatalogos();
   const [fotos, setFotos] = useState({}),
     [error, setError] = useState("");
   const idNuevo = useRef(nuevoId());
@@ -76,6 +78,8 @@ export default function SalidaVehiculo({ vehiculo, onGuardar, onVolver }) {
     identificacion.carreta = mostrarPlaca(identificacion.carreta);
     onGuardar({ identificacion, salida, idNuevo: idNuevo.current });
   }
+  if (catalogos.cargando) return <p>Cargando listas…</p>;
+  if (catalogos.error) return <p className="mensaje-error" role="alert">{catalogos.error} <button type="button" onClick={catalogos.cargar}>Reintentar</button> <button type="button" onClick={onVolver}>Volver</button></p>;
   return (
     <section className="salida-vehiculo">
       <button type="button" className="boton-secundario" onClick={onVolver}>
@@ -186,7 +190,7 @@ export default function SalidaVehiculo({ vehiculo, onGuardar, onVolver }) {
             </div>
             <div className="campo">
               <label htmlFor="destino-salida">Destino *</label>
-              <input id="destino-salida" name="destino" required />
+              <Selector id="destino-salida" name="destino" required><option value="">Seleccione…</option>{catalogos.opciones("vehiculos", "destino").map(o => <option key={o} value={o}>{o}</option>)}</Selector>
             </div>
             <div className="campo">
               <label htmlFor="boleta">

@@ -25,3 +25,16 @@ test('limita y valida parámetros sin interpretar el texto como SQL',async()=>{a
 
 test('busca cliente y operación activos y permite localizar por cualquiera de los nombres',async()=>{let r=await get('/api/catalogos/buscar/operaciones?q=mina');assert.equal(r.status,200);assert.deepEqual(r.body,[{id:11,cliente:'CLIENTE UNO',operacion:'MINA SUR'}]);r=await get('/api/catalogos/buscar/operaciones?q=cliente');assert.deepEqual(r.body.map(x=>x.id),[11]);});
 test('la placa devuelve el cliente y operación asociados',async()=>{const r=await get('/api/catalogos/vehiculos/V0T715');assert.equal(r.status,200);assert.equal(r.body.vehiculo.cliente_operacion_id,11);assert.equal(r.body.vehiculo.cliente,'CLIENTE UNO');assert.equal(r.body.vehiculo.operacion,'MINA SUR');});
+
+test('el catálogo de agentes filtra por área, cargo y estado, buscando nombre o DNI', async () => {
+  await db.exec(`ALTER TABLE public.personal ADD COLUMN area text;
+    INSERT INTO public.personal(id,nombre_completo,dni,cargo,estado,area) VALUES
+    (10,'AGENTE ACTIVO','10000001','AGENTE DE SEGURIDAD PATRIMONIAL','Activo','SEGURIDAD PATRIMONIAL'),
+    (11,'AGENTE INACTIVO','10000002','AGENTE DE SEGURIDAD PATRIMONIAL','Inactivo','SEGURIDAD PATRIMONIAL'),
+    (12,'SUPERVISOR ACTIVO','10000003','SUPERVISOR DE SEGURIDAD PATRIMONIAL','Activo','SEGURIDAD PATRIMONIAL'),
+    (13,'AGENTE OTRA AREA','10000004','AGENTE DE SEGURIDAD PATRIMONIAL','Activo','OPERACIONES')`);
+  let r = await get('/api/catalogos/buscar/agentes?q=1000000');
+  assert.equal(r.status, 200); assert.deepEqual(r.body.map(x => x.id), [10]);
+  r = await get('/api/catalogos/buscar/agentes?q=activo');
+  assert.deepEqual(r.body.map(x => x.id), [10]);
+});

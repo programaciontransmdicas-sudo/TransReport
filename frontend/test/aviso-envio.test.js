@@ -1,0 +1,26 @@
+import {test, after} from 'node:test';
+import assert from 'node:assert/strict';
+import {fileURLToPath} from 'node:url';
+import {JSDOM} from 'jsdom';
+import {createServer} from 'vite';
+import {createElement as h, act} from 'react';
+const dom=new JSDOM('<!doctype html><div id="root"></div>',{url:'http://localhost:5173'});
+for(const [k,v] of Object.entries({window:dom.window,document:dom.window.document,localStorage:dom.window.localStorage,Event:dom.window.Event,IS_REACT_ACT_ENVIRONMENT:true})) Object.defineProperty(globalThis,k,{value:v,configurable:true,writable:true});
+const {createRoot}=await import('react-dom/client');
+const vite=await createServer({root:fileURLToPath(new URL('../',import.meta.url)),server:{middlewareMode:true},appType:'custom',logLevel:'error'});
+const {api,EVENTO_ENVIO}=await vite.ssrLoadModule('/src/services/api/cliente.js');
+const {default:Conexion}=await vite.ssrLoadModule('/src/components/conexion/ConexionTablet.jsx');
+let enviando=false, pendiente=null;
+api.obtener=async()=>({autorizado:true,dispositivo:{id:'tablet',base:'Peruarbo'}});
+api.ocupado=()=>enviando;
+api.pendiente=async()=>pendiente;
+const root=createRoot(document.getElementById('root'));
+after(async()=>{await act(async()=>root.unmount());await vite.close();dom.window.close()});
+const actualizar=async()=>{await act(async()=>{window.dispatchEvent(new Event(EVENTO_ENVIO));await new Promise(r=>setTimeout(r,0));});};
+const aparece=()=>document.body.textContent.includes('Recuperar envío');
+test('no muestra recuperación durante el envío; sí después de un fallo y lo oculta al confirmarse',async()=>{
+ await act(async()=>{root.render(h(Conexion,null,h('main',null,'Contenido')));await new Promise(r=>setTimeout(r,20));});
+ pendiente={clave:'123'}; enviando=true; await actualizar();assert.equal(aparece(),false);
+ enviando=false; await actualizar();assert.equal(aparece(),true);
+ pendiente=null; await actualizar();assert.equal(aparece(),false);
+});

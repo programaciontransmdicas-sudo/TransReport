@@ -1,0 +1,53 @@
+.configuracion-panel { max-width: 950px; margin: 0 auto; }
+
+.configuracion-fila-acciones { display:flex; flex-wrap:wrap; gap:8px; }
+.configuracion-fila-acciones button { min-width:105px; }
+.configuracion-edicion { display:grid; gap:8px; flex:1; min-width:0; }
+.configuracion-edicion label { color:#6c6681; font-size:12px; font-weight:650; }
+.configuracion-edicion input { min-height:48px; padding:12px 13px; border:1px solid #e7e2f0; border-radius:12px; background:#fcfbff; color:var(--tr-ink); font-size:14px; }
+.configuracion-edicion input:focus { outline:0; border-color:#ac95df; box-shadow:0 0 0 3px #ac95f318; background:#fff; }
+@media (max-width:620px) { .configuracion-edicion input { font-size:16px; } .configuracion-fila-acciones button { min-width:0; flex:1 1 105px; } }
+
+.configuracion-grupos { display:flex; flex-wrap:wrap; gap:10px; margin: 20px 0; }
+.configuracion-grupos button { flex:1 1 140px; }
+.configuracion-cuerpo { padding: 22px; }
+.configuracion-cuerpo select,.configuracion-cuerpo input { width:100%; box-sizing:border-box; }
+.configuracion-agregar { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:end; margin:20px 0; }
+.configuracion-agregar label { grid-column:1 / -1; }
+.configuracion-fila { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0; border-top:1px solid #e6e4ef; }
+.configuracion-fila span { min-width:0; overflow-wrap:anywhere; }.configuracion-fila small { display:block; margin-top:4px; color:#68748a; }
+@media(max-width:620px){ .configuracion-cuerpo { padding:16px; }.configuracion-agregar { grid-template-columns:minmax(0,1fr); }.configuracion-fila { align-items:flex-start; flex-wrap:wrap; }.configuracion-fila button { min-width:115px; }.configuracion-panel input,.configuracion-panel select { font-size:16px; } }
+.configuracion-agregar label {
+  color: #6c6681;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+.configuracion-agregar input {
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px 13px;
+  border: 1px solid #e7e2f0;
+  border-radius: 12px;
+  background: #fcfbff;
+  color: var(--tr-ink);
+  font-size: 14px;
+}
+
+.configuracion-agregar input::placeholder {
+  color: #898198;
+}
+
+.configuracion-agregar input:focus {
+  outline: 0;
+  border-color: #ac95df;
+  box-shadow: 0 0 0 3px #ac95f318;
+  background: #fff;
+}
+
+@media (max-width: 620px) {
+  .configuracion-agregar input {
+    font-size: 16px;
+  }
+}

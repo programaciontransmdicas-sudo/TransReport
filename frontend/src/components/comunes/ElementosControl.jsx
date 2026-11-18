@@ -68,6 +68,7 @@ export function ListaControl({
   puedeCerrar,
   puedeFirmar,
   alFirmar,
+  ocultarCrear = false,
 }) {
   const [busqueda, setBusqueda] = useState(""),
     [estado, setEstado] = useState("");
@@ -78,13 +79,13 @@ export function ListaControl({
   const filas = control.registros;
   return (
     <>
-      <button
+      {!ocultarCrear && <button
         type="button"
         className="boton-principal"
         onClick={() => control.abrir(null, "nuevo")}
       >
         {crear}
-      </button>
+      </button>}
       <div className="filtros">
         <label htmlFor="buscar-control">
           Buscar por nombre, placa o contenido
@@ -187,6 +188,8 @@ export function FormularioControl({
   children,
   boton = "Guardar registro",
   minimos = {},
+  opcionesPorCampo = {},
+  opcionesExclusivas = {},
 }) {
   const [error, setError] = useState("");
   const formulario = useRef(null);
@@ -199,7 +202,15 @@ export function FormularioControl({
       const f = new FormData(e.currentTarget),
         datos = {};
       for (const c of campos) {
-        datos[c.nombre] = String(f.get(c.nombre) || "").trim();
+        const seleccion = c.tipo === "checklist"
+          ? f.getAll(c.nombre).map(valor => String(valor).trim()).filter(Boolean)
+          : [];
+        const exclusiva = opcionesExclusivas[c.nombre] ?? c.opcionExclusiva;
+        if (exclusiva && seleccion.includes(exclusiva) && seleccion.length > 1)
+          throw new Error(`Seleccione ${exclusiva} sin otros equipos.`);
+        datos[c.nombre] = c.tipo === "checklist"
+          ? seleccion.join("\n")
+          : String(f.get(c.nombre) || "").trim();
         if (c.obligatorio && !datos[c.nombre])
           throw new Error(`Complete: ${c.etiqueta}.`);
         if (
@@ -236,14 +247,24 @@ export function FormularioControl({
             <div className="grilla-campos-formulario">
               {seccion.campos.map((c) => (
                 <div
-                  className={`campo${c.tipo === "textarea" ? " campo-amplio" : ""}`}
+                  className={`campo${c.tipo === "textarea" || c.tipo === "checklist" ? " campo-amplio" : ""}`}
                   key={c.nombre}
                 >
                   <label id={`etiqueta-${`control-${c.nombre}`}`} htmlFor={`control-${c.nombre}`}>
                     {c.etiqueta}
                     {c.obligatorio ? " *" : ""}
                   </label>
-                  {c.opciones ? (
+                  {c.tipo === "checklist" ? (
+                    <div className="lista-verificacion" role="group" aria-labelledby={`etiqueta-control-${c.nombre}`}>
+                      {(opcionesPorCampo[c.nombre] || c.opciones).map((opcion, indice) => (
+                        <label className="lista-verificacion-opcion" key={opcion}>
+                          <input id={indice === 0 ? `control-${c.nombre}` : undefined}
+                            type="checkbox" name={c.nombre} value={opcion} />
+                          <span>{opcion}</span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : c.opciones ? (
                     <Selector
                       id={`control-${c.nombre}`}
                       name={c.nombre}
@@ -259,7 +280,7 @@ export function FormularioControl({
                         ? [leerConfiguracion()?.dispositivo.base].filter(
                             Boolean,
                           )
-                        : c.opciones
+                        : (opcionesPorCampo[c.nombre] || c.opciones)
                       ).map((o) => (
                         <option key={o}>{o}</option>
                       ))}
@@ -492,6 +513,14 @@ export function SeleccionarAdjuntos({
           onChange={elegir}
         />
       </label>
+      {(!documentos || soloSustento) && (
+        <label className="carga-archivo">
+          <IconoApp nombre="camara" />
+          <strong>Tomar foto</strong>
+          <span>Abrir la cámara del dispositivo</span>
+          <input type="file" accept="image/*" capture="environment" onChange={elegir} />
+        </label>
+      )}
       <small>Máximo 5 MB por archivo.</small>
       {error && (
         <p className="mensaje-error" role="alert">

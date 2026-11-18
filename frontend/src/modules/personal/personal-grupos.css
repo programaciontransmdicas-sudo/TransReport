@@ -1,0 +1,67 @@
+.personal-acciones { display:flex; flex-wrap:wrap; gap:10px; margin:16px 0; }
+.personal-accesos { display:grid; gap:12px; }
+.personal-accesos .tarjeta { padding:18px; background:#fff; border:1px solid #e7e4f1; border-radius:14px; box-shadow:0 4px 16px #2630590a; }
+.personal-accesos .tarjeta strong { color:#202848; font-size:1rem; }
+.personal-accesos .tarjeta p { color:#71809a; margin:8px 0 14px; }
+.personal-grupo { max-width:860px; }
+.personal-grupo > h3 { margin-bottom:6px; }
+.personal-grupo > p { color:#64748b; line-height:1.5; }
+.personal-grupo .catalogo-caja input.catalogo-entrada { box-sizing:border-box; display:block; width:100%; min-width:0; min-height:50px; padding:12px 14px 12px 40px; border:1px solid #e1e5ef; border-radius:11px; background:#fafafe; color:#152a43; font:inherit; }
+.personal-grupo .catalogo-caja input.catalogo-entrada:focus { border-color:#957ff1; outline:none; box-shadow:0 0 0 3px #7057ed1a; }
+.personal-busqueda { display:grid; gap:8px; margin:20px 0 16px; }
+.personal-busqueda > label { font-size:.85rem; font-weight:700; color:#414d68; }
+.personal-busqueda-caja { position:relative; }
+.personal-busqueda-caja svg { position:absolute; top:50%; left:14px; width:19px; height:19px; color:#858fa7; transform:translateY(-50%); pointer-events:none; }
+.personal-busqueda-caja input { box-sizing:border-box; width:100%; min-height:50px; padding:12px 14px 12px 42px; border:1px solid #e1e5ef; border-radius:11px; background:#fff; color:#152a43; font:inherit; }
+.personal-busqueda-caja input:focus { outline:none; border-color:#957ff1; box-shadow:0 0 0 3px #7057ed1a; }
+.personal-resumen { display:flex; justify-content:space-between; align-items:center; gap:8px; margin:0 0 10px; color:#283353; font-size:.88rem; }
+.personal-contador { padding:6px 10px; border-radius:20px; color:#6049bf; background:#eeebff; font-size:.76rem; font-weight:700; white-space:nowrap; }
+.personal-lista { display:grid; align-content:start; gap:8px; max-height:48vh; overflow-y:auto; overscroll-behavior:contain; padding:2px 4px 2px 0; margin:0 0 12px; }
+.personal-fila { background:#fff; border:1px solid #e5e4f0; border-radius:12px; padding:12px 14px; transition:border-color .15s ease,background-color .15s ease; }
+.personal-fila.seleccionada { background:#f5f2ff; border-color:#9b8be9; }
+.personal-fila > label { display:flex; gap:12px; align-items:center; min-height:40px; cursor:pointer; }
+.personal-fila input[type=checkbox] { width:22px; height:22px; flex:none; accent-color:#7057ed; }
+.personal-fila label span { display:grid; gap:4px; min-width:0; }
+.personal-fila label strong { font-size:.9rem; overflow-wrap:anywhere; }
+.personal-fila small { color:#71809a; }
+.personal-hora { margin:10px 0 0 34px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; color:#5a4d94; font-size:.85rem; }
+.personal-hora label { display:grid; gap:3px; }
+.personal-hora input { max-width:220px; }
+@media (max-width:480px) { .personal-grupo .personal-acciones button { flex:1 1 auto; } .personal-resumen { align-items:flex-start; } }
+
+/* Selección compacta, visible también mientras se filtra la lista superior. */
+.personal-seleccion { margin:18px 0; padding:14px; border:1px solid #e1dcf4; border-radius:15px; background:#f8f6ff; }
+.personal-seleccion-cabecera { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+.personal-seleccion-cabecera h4 { margin:0; font-size:.94rem; color:#283353; }
+.personal-seleccion-cabecera small { color:#71809a; font-size:.75rem; }
+.personal-seleccion-vacia { margin:0; padding:8px 0; color:#71809a; font-size:.84rem; }
+.personal-seleccion-lista { display:grid; gap:7px; max-height:32vh; overflow-y:auto; overscroll-behavior:contain; }
+.personal-seleccion-fila { display:flex; gap:10px; align-items:flex-start; min-width:0; padding:10px; border:1px solid #e9e5f5; border-radius:10px; background:#fff; animation:personal-aparece .2s ease-out both; }
+.personal-seleccion-check { display:grid; place-items:center; width:24px; height:24px; flex:none; border-radius:50%; color:#fff; background:#7057ed; font-size:.8rem; }
+.personal-seleccion-datos { display:grid; gap:3px; flex:1; min-width:0; }
+.personal-seleccion-datos strong { color:#283353; font-size:.82rem; overflow-wrap:anywhere; }
+.personal-seleccion-datos small { color:#71809a; font-size:.73rem; }
+.personal-seleccion-datos details { color:#6049bf; font-size:.75rem; }
+.personal-seleccion-datos summary { cursor:pointer; width:fit-content; padding:4px 0; }
+.personal-seleccion-datos details label { display:grid; gap:4px; margin-top:4px; }
+.personal-seleccion-datos input { max-width:220px; min-height:40px; font:inherit; }
+.personal-seleccion-quitar { flex:none; min-height:40px; padding:6px 10px; border:1px solid #ddd7f1; border-radius:9px; color:#6551ad; background:#fff; font-weight:700; cursor:pointer; }
+.personal-seleccion-quitar:focus-visible { outline:3px solid #ab9bfa; outline-offset:2px; }
+.personal-seleccion-quitar:disabled { opacity:.55; cursor:not-allowed; }
+@keyframes personal-aparece { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .personal-seleccion-fila { animation:none; } }
+@media (max-width:480px) { .personal-seleccion { padding:11px; } .personal-seleccion-lista { max-height:30vh; } .personal-seleccion-quitar { padding-inline:8px; } .personal-seleccion-datos input { max-width:100%; font-size:16px; } }
+
+/* Personas marcadas: fichas cortas para evitar una segunda lista larga. */
+.personal-seleccion { padding:10px 12px; }
+.personal-seleccion-cabecera { margin-bottom:7px; }
+.personal-seleccion-lista { grid-template-columns:repeat(auto-fit, minmax(min(100%, 195px), 1fr)); max-height:22vh; gap:5px; }
+.personal-seleccion-fila { padding:6px 7px; gap:6px; border-radius:9px; }
+.personal-seleccion-check { width:18px; height:18px; font-size:.68rem; }
+.personal-seleccion-datos { gap:1px; }
+.personal-seleccion-datos strong { font-size:.75rem; line-height:1.2; }
+.personal-seleccion-datos small { font-size:.68rem; line-height:1.2; }
+.personal-seleccion-datos summary { font-size:.68rem; padding:1px 0; }
+.personal-seleccion-quitar { min-width:36px; min-height:36px; padding:0; line-height:1; font-size:1.1rem; }
+@media (max-width:480px) { .personal-seleccion-lista { grid-template-columns:repeat(2, minmax(0, 1fr)); max-height:23vh; } }
+@media (max-width:350px) { .personal-seleccion-lista { grid-template-columns:minmax(0, 1fr); } }

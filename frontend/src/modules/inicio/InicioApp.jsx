@@ -10,7 +10,7 @@ export function TarjetasControles({ onElegir, rapidos = false }) {
     : controles;
   const ayudas = {
     vehiculos: "Ingreso o salida",
-    personal: "Acceso y firma",
+    personal: "Ingreso o salida",
     llaves: "Entrega y devolución",
     relevos: "Cambio de turno",
     rondas: "Recorridos de seguridad",
@@ -101,7 +101,6 @@ export default function InicioApp({
   resumen,
   onRegistrar,
   onDetalle,
-  onFirmas,
   onTodos,
 }) {
   const fecha = new Intl.DateTimeFormat("es-PE", {
@@ -151,16 +150,14 @@ export default function InicioApp({
             <span>Unidades en base</span>
             <small>Control de vehículos</small>
           </div>
-          <button type="button" className="metrica-app" onClick={onFirmas}>
+          <div className="metrica-app">
             <span className="icono-metrica">
-              <IconoApp nombre="firma" />
+              <IconoApp nombre="persona" />
             </span>
-            <strong>{resumen.totalFirmas}</strong>
-            <span>Firmas pendientes</span>
-            <small>
-              Revisar ingresos <IconoApp nombre="flecha" />
-            </small>
-          </button>
+            <strong>{resumen.personasEnBase ?? "—"}</strong>
+            <span>Personas en base</span>
+            <small>Control de personal</small>
+          </div>
         </div>
       </div>
       <div className="titulo-seccion-app">

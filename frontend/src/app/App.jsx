@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { guardarNavegacion, recuperarNavegacion } from "./navegacion.js";
+import Configuracion from "../modules/configuracion/Configuracion.jsx";
 import Cabecera from "../components/layout/Cabecera.jsx";
 import ControlVehiculos from "../modules/vehiculos/components/ControlVehiculos.jsx";
 import PersonalPanel from "../modules/personal/PersonalPanel.jsx";
@@ -13,6 +15,8 @@ import useResumenApp from "../hooks/useResumenApp.js";
 import { controles } from "../config/controles.js";
 import "../styles/modulos.css";
 import "../styles/experiencia-clara.css";
+import "../styles/botones-uniformes.css";
+import "../styles/responsive.css";
 const paneles = {
   vehiculos: ControlVehiculos,
   personal: PersonalPanel,
@@ -21,13 +25,51 @@ const paneles = {
 };
 export default function App() {
   const resumen = useResumenApp();
-  const [pagina, setPagina] = useState("inicio"),
-    [tipoActivo, setTipoActivo] = useState(null),
+  const [restaurada] = useState(() => recuperarNavegacion());
+  const historialInterno = useRef([]);
+  const [pagina, setPagina] = useState(restaurada?.pagina || "inicio"),
+    [tipoActivo, setTipoActivo] = useState(restaurada?.tipoActivo || null),
     [solicitud, setSolicitud] = useState(null),
     [bloqueo, setBloqueo] = useState(false),
     [busqueda, setBusqueda] = useState("");
+  useEffect(() => { guardarNavegacion({ pagina, tipoActivo }); }, [pagina, tipoActivo]);
+  function recordar() {
+    historialInterno.current.push({ pagina, tipoActivo, solicitud, busqueda });
+    if (historialInterno.current.length > 30) historialInterno.current.shift();
+  }
+  useEffect(() => {
+    if (!window.history.state?.transreportGuardia) {
+      window.history.pushState({ ...(window.history.state || {}), transreportGuardia: true }, '');
+    }
+    const retroceder = () => {
+      window.history.pushState({ ...(window.history.state || {}), transreportGuardia: true }, '');
+      const detalle = { atendido: false };
+      window.dispatchEvent(new CustomEvent('transreport-retroceder', { detail: detalle }));
+      if (detalle.atendido || bloqueo) return;
+      const anterior = historialInterno.current.pop();
+      if (anterior) {
+        setPagina(anterior.pagina); setTipoActivo(anterior.tipoActivo);
+        setSolicitud(anterior.solicitud || null); setBusqueda(anterior.busqueda || '');
+      } else if (tipoActivo && tipoActivo !== 'todos') {
+        setTipoActivo(pagina === 'movimientos' ? 'todos' : null);
+        setSolicitud(null); setBusqueda('');
+      } else {
+        setPagina('inicio'); setTipoActivo(null); setSolicitud(null); setBusqueda('');
+      }
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener('popstate', retroceder);
+    return () => window.removeEventListener('popstate', retroceder);
+  }, [pagina, tipoActivo, bloqueo]);
+  useEffect(() => {
+    if (!bloqueo) return;
+    const avisar = evento => { evento.preventDefault(); evento.returnValue = ''; };
+    window.addEventListener('beforeunload', avisar);
+    return () => window.removeEventListener('beforeunload', avisar);
+  }, [bloqueo]);
   function ir(p) {
     if (bloqueo) return;
+    if (p !== pagina || tipoActivo) recordar();
     setPagina(p);
     setTipoActivo(p === "movimientos" ? "todos" : null);
     setSolicitud(null);
@@ -36,6 +78,7 @@ export default function App() {
   }
   function registrar(tipo) {
     if (bloqueo) return;
+    if (pagina !== "registrar" || tipoActivo !== (tipo || null)) recordar();
     setPagina("registrar");
     setTipoActivo(tipo || null);
     setSolicitud(null);
@@ -43,12 +86,14 @@ export default function App() {
   }
   function abrir(item, accion = "detalle") {
     if (bloqueo) return;
+    recordar();
     setPagina(accion === "firma" ? "firmas" : "movimientos");
     setTipoActivo(item.control.id);
     setSolicitud({ accion, id: item.registro.id });
     window.scrollTo({ top: 0 });
   }
   function elegirControl(tipo) {
+    if (tipoActivo !== tipo) recordar();
     setTipoActivo(tipo);
     setSolicitud(null);
     setBusqueda("");
@@ -100,12 +145,12 @@ export default function App() {
           <p role="status">Cargando registros…</p>
         ) : (
           <>
+            {pagina === "configuracion" && <Configuracion />}
             {pagina === "inicio" && (
               <InicioApp
                 resumen={resumen}
                 onRegistrar={registrar}
                 onDetalle={abrir}
-                onFirmas={() => ir("firmas")}
                 onTodos={() => ir("movimientos")}
               />
             )}
@@ -186,39 +231,6 @@ export default function App() {
                 )}
               </section>
             )}
-            {pagina === "firmas" && !Panel && (
-              <section>
-                <p className="fecha-app">Conformidad del conductor</p>
-                <h2>Firmas de personal</h2>
-                {resumen.masFirmas && (
-                  <button
-                    type="button"
-                    className="boton-secundario"
-                    disabled={resumen.ocupado}
-                    onClick={() => resumen.cargarMas(true)}
-                  >
-                    Cargar más firmas
-                  </button>
-                )}
-                <p className="subtitulo-app">
-                  El conductor revisa y firma en este mismo dispositivo.
-                </p>
-                {resumen.pendientes.length ? (
-                  resumen.pendientes.map((item) => (
-                    <TarjetaMovimiento
-                      key={item.control.id + item.registro.id}
-                      item={item}
-                      onDetalle={abrir}
-                      onFirmar={(item) => abrir(item, "firma")}
-                    />
-                  ))
-                ) : (
-                  <p className="vacio-app">
-                    No hay ingresos pendientes de firma.
-                  </p>
-                )}
-              </section>
-            )}
             {Panel && (
               <section>
                 {!bloqueo && pagina !== "movimientos" && (
@@ -248,7 +260,7 @@ export default function App() {
             { id: "inicio", nombre: "Inicio", icono: "inicio" },
             { id: "registrar", nombre: "Registrar", icono: "agregar" },
             { id: "movimientos", nombre: "Movimientos", icono: "movimientos" },
-            { id: "firmas", nombre: "Firmas", icono: "firma" },
+            { id: "configuracion", nombre: "Configuración", icono: "configuracion" },
           ].map((t) => (
             <button
               type="button"

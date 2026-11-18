@@ -57,15 +57,16 @@ function FotoIndividual({ vista, archivo, onCambiar, posicion }) {
         </div>
       )}
 
-      <label className="seleccionar-foto">
-        {archivo ? "Cambiar foto" : "Agregar foto"}
-        <input
-          type="file"
-          aria-label={`Adjuntar fotografía: ${vista}`}
-          accept="image/jpeg,image/png,image/webp"
-          onChange={seleccionar}
-        />
-      </label>
+      <div className="acciones-foto">
+        <label className="seleccionar-foto">
+          Tomar foto
+          <input type="file" aria-label={`Tomar fotografía: ${vista}`} accept="image/*" capture="environment" onChange={seleccionar} />
+        </label>
+        <label className="seleccionar-foto">
+          {archivo ? "Cambiar archivo" : "Elegir archivo"}
+          <input type="file" aria-label={`Elegir fotografía: ${vista}`} accept="image/jpeg,image/png,image/webp" onChange={seleccionar} />
+        </label>
+      </div>
 
       {archivo && (
         <>

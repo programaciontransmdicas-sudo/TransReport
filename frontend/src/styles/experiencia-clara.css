@@ -798,7 +798,7 @@ textarea:focus-visible {
   grid-column: 2;
   grid-row: 2;
 }
-.filtros button {
+.filtros > button {
   grid-column: 1/-1;
   justify-self: start;
   margin: 0;
@@ -1903,3 +1903,6 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Opciones separadas para abrir la cámara o seleccionar una imagen existente. */
+.acciones-foto { display: grid; gap: .45rem; width: 100%; }

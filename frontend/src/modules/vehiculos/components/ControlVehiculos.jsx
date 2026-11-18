@@ -70,6 +70,18 @@ export default function ControlVehiculos({ solicitud, onBloqueo }) {
   function volver() {
     abrir(null, "inicio");
   }
+  useEffect(() => {
+    if (pantalla === 'inicio') return;
+    const manejar = evento => {
+      evento.detail.atendido = true;
+      if (ocupado) return;
+      if (['ingreso', 'salida', 'salidaLibre'].includes(pantalla) &&
+          !window.confirm('¿Desea salir? Los datos y fotografías no guardados se perderán.')) return;
+      volver();
+    };
+    window.addEventListener('transreport-retroceder', manejar);
+    return () => window.removeEventListener('transreport-retroceder', manejar);
+  }, [pantalla, ocupado]);
   async function guardarIngreso(datos) {
     try {
       setAviso("");

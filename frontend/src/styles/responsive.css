@@ -1,0 +1,94 @@
+/* Distribución común de TransReport para pantallas táctiles. */
+.aplicacion.app-movil,
+.app-movil .contenido-app,
+.app-movil .panel-control,
+.app-movil .control-vehiculos,
+.app-movil .formulario,
+.app-movil .campos-control,
+.app-movil .seccion-formulario,
+.app-movil .personal-grupo { min-width: 0; max-width: 100%; }
+
+/* La navegación actual tiene tres destinos. */
+.app-movil .barra-inferior-app { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.app-movil .barra-inferior-app button { min-width: 0; }
+
+/* El selector visible es un div, no el select nativo oculto que contiene. */
+.app-movil .filtros > .selector-personalizado { grid-column: 2; grid-row: 2; min-width: 0; width: 100%; }
+.app-movil .filtros > button { grid-column: 1 / -1; grid-row: auto; }
+.app-movil .filtros .selector-boton { width: 100%; min-width: 0; min-height: 48px; padding: 8px 10px 8px 14px; text-align: left; }
+.app-movil .filtros .selector-lista { z-index: 45; }
+.app-movil .filtros .selector-lista button { width: 100%; min-height: 44px; text-align: left; }
+
+/* Los estilos de los campos no deben agrandar las casillas del checklist. */
+.app-movil .formulario .lista-verificacion input[type="checkbox"] {
+  display: inline-block; width: 22px; height: 22px; min-width: 22px; min-height: 22px;
+  max-width: 22px; max-height: 22px; padding: 0; margin: 0; flex: 0 0 22px;
+  box-shadow: none;
+}
+.app-movil .lista-verificacion-opcion { min-width: 0; }
+.app-movil .campo input:not([type="checkbox"]):not([type="file"]),
+.app-movil .campo textarea,
+.app-movil .campo .selector-personalizado,
+.app-movil .catalogo-buscador { width: 100%; min-width: 0; max-width: 100%; }
+.app-movil .acciones-formulario,
+.app-movil .acciones-tarjeta,
+.app-movil .personal-acciones { flex-wrap: wrap; min-width: 0; }
+.app-movil .acciones-formulario .boton-principal,
+.app-movil .acciones-formulario .boton-secundario { flex: 1 1 140px; min-width: 0; }
+.app-movil .personal-fila { min-width: 0; }
+.app-movil .personal-hora input { min-width: 0; max-width: 100%; }
+
+@media (max-width: 620px) {
+  .app-movil .contenido.contenido-app { padding-inline: 16px; }
+  .app-movil .cabecera-interior,
+  .app-movil .cabecera .estado-conexion { padding-inline: 16px; }
+  .app-movil .filtros { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .app-movil .filtros > label,
+  .app-movil .filtros > label:nth-of-type(2),
+  .app-movil .filtros > input,
+  .app-movil .filtros > select,
+  .app-movil .filtros > .selector-personalizado,
+  .app-movil .filtros > button { grid-column: 1; grid-row: auto; width: 100%; min-width: 0; }
+  .app-movil .grilla-campos-formulario { grid-template-columns: minmax(0, 1fr); padding: 17px; }
+  .app-movil .campo-amplio { grid-column: 1; }
+  /* Evita el zoom automático de Safari al enfocar campos. */
+  .app-movil .campo input:not([type="checkbox"]):not([type="file"]),
+  .app-movil .campo textarea,
+  .app-movil .selector-boton,
+  .app-movil .filtros > input,
+  .app-movil .personal-busqueda-caja input { font-size: 16px; }
+  .app-movil .personal-lista { max-height: 48vh; max-height: 48dvh; }
+  .app-movil .personal-hora { margin-left: 0; }
+  .app-movil .personal-hora label,
+  .app-movil .personal-hora input { width: 100%; max-width: 100%; }
+  .app-movil .personal-resumen { flex-wrap: wrap; }
+  .app-movil .selector-lista,
+  .app-movil .catalogo-resultados ul { max-height: 40vh; max-height: min(220px, 40dvh); }
+
+  /* En teléfonos, las cinco fotografías tienen espacio para ambos botones. */
+  .app-movil .mapa-fotos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-areas: "frente posterior" "izquierda derecha" "cabina cabina";
+    align-items: stretch; gap: 10px;
+  }
+  .app-movil .mapa-fotos .dibujo-camion { display: none; }
+  .app-movil .mapa-fotos .foto-vehiculo { width: 100%; max-width: none; justify-self: stretch; }
+  .app-movil .mapa-fotos .vista-4 { max-width: 300px; justify-self: center; }
+  .app-movil .seleccionar-foto { min-width: 0; min-height: 44px; margin-top: 0; overflow-wrap: anywhere; text-align: center; }
+}
+@media (max-width: 360px) {
+  .app-movil .contenido.contenido-app { padding-inline: 12px; }
+  .app-movil .grilla-campos-formulario { padding: 14px; }
+  .app-movil .opciones-movimiento { grid-template-columns: minmax(0, 1fr); }
+  .app-movil .mapa-fotos {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "frente" "izquierda" "derecha" "posterior" "cabina";
+  }
+  .app-movil .mapa-fotos .foto-vehiculo,
+  .app-movil .mapa-fotos .vista-4 { max-width: none; }
+}
+@media (min-width: 768px) and (max-width: 1199px) {
+  .app-movil .contenido.contenido-app { padding-inline: 26px; }
+  .app-movil .grilla-campos-formulario { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app-movil .personal-grupo { max-width: 860px; }
+}

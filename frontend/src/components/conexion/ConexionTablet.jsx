@@ -15,6 +15,7 @@ export default function ConexionTablet({ children }) {
   const [acceso, setAcceso] = useState(null),
     [error, setError] = useState(""),
     [pendiente, setPendiente] = useState(null),
+    [enviando, setEnviando] = useState(false),
     [ocupado, setOcupado] = useState(false),
     [version, setVersion] = useState(0),
     [mensaje, setMensaje] = useState("");
@@ -39,15 +40,21 @@ export default function ConexionTablet({ children }) {
     activo.current = true;
     retirarConfiguracionAnterior();
     comprobar();
-    const envios = () =>
-      api
-        .pendiente()
+    let secuenciaEnvios = 0;
+    const envios = () => {
+      const turno = ++secuenciaEnvios;
+      setEnviando(api.ocupado());
+      api.pendiente()
         .then((v) => {
-          if (activo.current) setPendiente(v);
+          if (activo.current && turno === secuenciaEnvios) {
+            setPendiente(v);
+            setEnviando(api.ocupado());
+          }
         })
         .catch((e) => {
-          if (activo.current) setError(e.message);
+          if (activo.current && turno === secuenciaEnvios) setError(e.message);
         });
+    };
     const visible = () => {
       if (document.visibilityState === "visible") comprobar();
     };
@@ -186,7 +193,7 @@ export default function ConexionTablet({ children }) {
     );
   return (
     <ConexionContext.Provider value={{ dispositivo: acceso.dispositivo }}>
-      {pendiente && (
+      {pendiente && !enviando && (
         <section className="aviso-envio" aria-label="Envío pendiente">
           <strong>Hay un envío pendiente de confirmación.</strong>
           <p>

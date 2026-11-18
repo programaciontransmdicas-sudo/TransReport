@@ -1,3 +1,4 @@
+import { useCatalogos } from "../../configuracion/catalogo.js";
 import { useOperacionVehiculo } from "../../../components/catalogos/useOperacionVehiculo.js";
 import Selector from "../../../components/comunes/Selector.jsx";
 import { nuevoId } from "../../../utils/identificador.js";
@@ -21,7 +22,7 @@ const campos = [
   },
   {
     nombre: "agente",
-    etiqueta: "Agente de entrada · iniciales",
+    etiqueta: "Agente de entrada",
     obligatorio: true,
   },
   {
@@ -48,26 +49,24 @@ const campos = [
   {
     nombre: "kilometraje",
     etiqueta: "Kilometraje de entrada",
-    tipo: "number",
+    patron: "[0-9]{1,8}",
+    longitud: 8,
     obligatorio: true,
   },
   {
     nombre: "origen",
     etiqueta: "Origen",
+    opciones: ["Ejemplo: base", "Ejemplo: taller", "Ejemplo: cliente"],
     obligatorio: true,
   },
   {
     nombre: "destino",
     etiqueta: "Destino",
+    opciones: ["Ejemplo: base", "Ejemplo: taller", "Ejemplo: cliente"],
   },
   {
     nombre: "operacion",
     etiqueta: "Cliente / Operación",
-    obligatorio: true,
-  },
-  {
-    nombre: "condicion",
-    etiqueta: "Estado de la unidad",
     obligatorio: true,
   },
   {
@@ -98,8 +97,10 @@ function formatearPlaca(valor) {
 }
 
 function IngresoVehiculo({ onGuardar, onVolver }) {
+  const catalogos = useCatalogos();
   const id = useRef(nuevoId());
   const formulario = useRef(null);
+  const agenteSeleccionado = useRef(null);
   const vinculoConductor = useVinculoPersona(formulario, 'conductor', 'dni');
   const vinculoOperacion = useOperacionVehiculo(formulario);
   const [fotos, setFotos] = useState({});
@@ -129,6 +130,11 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
       }
     }
 
+    if (!agenteSeleccionado.current || datos.agente !== agenteSeleccionado.current.nombre_completo) {
+      setError("Seleccione un agente de Seguridad Patrimonial de la lista.");
+      return;
+    }
+
     const faltantes = VISTAS.filter((vista) => !fotos[vista]);
 
     if (faltantes.length > 0) {
@@ -144,13 +150,14 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
       carreta: formatearPlaca(datos.carreta),
       kilometraje: Number(datos.kilometraje),
       controles: formulario.getAll("controles"),
-      precintos: String(formulario.get("precintos") || "").trim(),
       observaciones: String(formulario.get("observaciones") || "").trim(),
       estado: "En base",
       fotos,
     });
   }
 
+  if (catalogos.cargando) return <p>Cargando listas…</p>;
+  if (catalogos.error) return <p className="mensaje-error" role="alert">{catalogos.error} <button type="button" onClick={catalogos.cargar}>Reintentar</button> <button type="button" onClick={onVolver}>Volver</button></p>;
   return (
     <section>
       <button type="button" className="boton-secundario" onClick={onVolver}>
@@ -226,13 +233,17 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
 
                           {(campo.nombre === "base"
                             ? [leerConfiguracion()?.dispositivo.base]
-                            : campo.opciones
+                            : catalogos.opciones("vehiculos", campo.nombre)
                           ).map((opcion) => (
                             <option key={opcion} value={opcion}>
                               {opcion}
                             </option>
                           ))}
                         </Selector>
+                      ) : campo.nombre === 'agente' ? (
+                        <BuscadorCatalogo tipo="agentes" id={campo.nombre} name={campo.nombre} required
+                          onSeleccionar={persona => { agenteSeleccionado.current = persona; setError(''); }}
+                          onEditar={() => { agenteSeleccionado.current = null; }} />
                       ) : campo.nombre === 'operacion' ? (
                         <BuscadorCatalogo tipo="operaciones" id={campo.nombre} name={campo.nombre} required
                           onSeleccionar={vinculoOperacion.elegirOperacion} onEditar={vinculoOperacion.editarOperacion} />
@@ -266,7 +277,7 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
                           }
                           maxLength={esPlaca ? 7 : campo.longitud}
                           inputMode={
-                            campo.nombre === "dni" ? "numeric" : undefined
+                            ["dni", "kilometraje"].includes(campo.nombre) ? "numeric" : undefined
                           }
                         />
                       )}
@@ -289,13 +300,6 @@ function IngresoVehiculo({ onGuardar, onVolver }) {
             </label>
           ))}
         </fieldset>
-
-        <div className="campo">
-          <label id="etiqueta-precintos" htmlFor="precintos">
-            Precintos y materiales transportados
-          </label>
-          <textarea id="precintos" name="precintos" rows={3} />
-        </div>
 
         <div className="campo">
           <label id="etiqueta-observaciones" htmlFor="observaciones">Observaciones</label>

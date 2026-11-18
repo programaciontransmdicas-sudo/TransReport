@@ -1,0 +1,23 @@
+import {test,after} from 'node:test';
+import assert from 'node:assert/strict';
+import {fileURLToPath} from 'node:url';
+import {JSDOM} from 'jsdom';
+import {createServer} from 'vite';
+import {createElement as h,act} from 'react';
+const dom=new JSDOM('<!doctype html><div id="root"></div>',{url:'http://localhost:5173'});
+for(const [k,v] of Object.entries({window:dom.window,document:dom.window.document,Event:dom.window.Event,FormData:dom.window.FormData,IS_REACT_ACT_ENVIRONMENT:true})) Object.defineProperty(globalThis,k,{value:v,configurable:true,writable:true});
+const {createRoot}=await import('react-dom/client');
+const vite=await createServer({root:fileURLToPath(new URL('../',import.meta.url)),server:{middlewareMode:true},appType:'custom',logLevel:'error'});
+const {default:Selector}=await vite.ssrLoadModule('/src/components/comunes/Selector.jsx');
+const root=createRoot(document.getElementById('root'));
+after(async()=>{await act(async()=>root.unmount());await vite.close();dom.window.close()});
+test('un toque conserva la lista si el selector pierde el foco antes del clic',async()=>{
+ await act(async()=>root.render(h('form',null,h(Selector,{id:'estado',name:'estado'},h('option',{value:''},'Seleccione'),h('option',{value:'si'},'Sí'),h('option',{value:'no'},'No')))));
+ const boton=document.getElementById('estado');
+ await act(async()=>boton.click());
+ const opcion=[...document.querySelectorAll('[role=option]')].find(e=>e.textContent==='Sí');assert.ok(opcion);
+ await act(async()=>boton.dispatchEvent(new dom.window.FocusEvent('focusout',{bubbles:true,relatedTarget:null})));
+ await act(async()=>opcion.click());
+ assert.equal(new FormData(document.querySelector('form')).get('estado'),'si');
+ assert.equal(boton.getAttribute('aria-expanded'),'false');
+});

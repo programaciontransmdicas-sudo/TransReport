@@ -43,3 +43,9 @@ test('si falla el reintento, conserva el envío; un error de autorización no se
   assert.equal(intentos,status===503?2:1); assert.ok(await cola.leer());
  }
 });
+
+test('errores del servidor muestran la referencia para localizar el problema',async()=>{
+ const referencia='11111111-1111-4111-8111-111111111111';
+ const c=crearCliente({configuracion:()=>({servidor:'http://localhost',dispositivo:{id:'equipo'}}),notificarCambio(){},transporte:async()=>new Response(JSON.stringify({mensaje:'Error interno',solicitudId:referencia}),{status:500})});
+ await assert.rejects(c.obtener('/api/personal/accesos'),e=>e.estado===500 && e.message.includes(referencia));
+});

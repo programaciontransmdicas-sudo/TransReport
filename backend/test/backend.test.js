@@ -101,7 +101,7 @@ before(async () => {
       }
     },
   };
-  assert.equal((await aplicarMigraciones(pool)).length, 7);
+assert.equal((await aplicarMigraciones(pool)).length, 12);
   assert.equal((await aplicarMigraciones(pool)).length, 0);
   for (const [ip, base, activo] of [
     [ipA, "Peruarbo", true],
@@ -1050,4 +1050,58 @@ test("Backend completo de TransReport", async (t) => {
       assert.ok(logs.some((e) => e.codigo === "ARCHIVO_PENDIENTE_LIMPIEZA"));
     },
   );
+});
+
+
+test('accesos de personal: grupo, idempotencia, duplicados y salidas', async () => {
+  await pool.query('ALTER TABLE public.personal ADD COLUMN area text');
+  await pool.query("INSERT INTO public.personal(id,dni,nombre_completo,estado,cargo,area) VALUES (100,'10000000','AGENTE SP','Activo','AGENTE DE SEGURIDAD PATRIMONIAL','SEGURIDAD PATRIMONIAL'),(101,'10000001','PERSONA UNO','Activo','CONDUCTOR','OPERACIONES'),(102,'10000002','PERSONA DOS','Activo','CONDUCTOR','OPERACIONES')");
+  const accesoId = randomUUID();
+  const creado = await enviar('/personal/accesos', { id: accesoId, fechaProgramada:'2026-11-19T07:00',motivo:'Inicio de jornada',agenteId:100 });
+  assert.equal(creado.status,201,JSON.stringify(creado.body));
+  assert.equal((await obtener('/personal/accesos')).body.accesos.some(x=>x.id===accesoId),true);
+  assert.equal((await obtener('/personal/catalogo')).body.personas.some(x=>x.dni==='10000001'),true);
+  const id1=randomUUID(), id2=randomUUID(), clave=randomUUID();
+  const grupo={agenteId:100,personas:[{id:id1,dni:'10000001',fecha:'2026-11-19T12:00:01Z'},{id:id2,dni:'10000002',fecha:'2026-11-19T12:00:35Z'}]};
+  const ing=await enviar(`/personal/accesos/${accesoId}/ingresos`,grupo,{clave});
+  assert.equal(ing.status,201,JSON.stringify({body:ing.body,logs:logs.slice(-3)}));
+  assert.equal((await enviar(`/personal/accesos/${accesoId}/ingresos`,grupo,{clave})).status,200);
+  const disponiblesDurante=(await obtener('/personal/catalogo')).body.personas.map(x=>x.dni);
+  assert.equal(disponiblesDurante.includes('10000001'),false);
+  assert.equal(disponiblesDurante.includes('10000002'),false);
+  const a=(await obtener(`/personal/${id1}`)).body.registro, b=(await obtener(`/personal/${id2}`)).body.registro;
+  assert.equal(a.fecha,'2026-11-19T12:00:01Z');assert.equal(b.fecha,'2026-11-19T12:00:35Z');assert.equal(a.estado,'En instalaciones');
+  assert.equal((await enviar(`/personal/accesos/${accesoId}/ingresos`,{agenteId:100,personas:[{...grupo.personas[0],id:randomUUID()}]})).status,409);
+  const invalida=await enviar('/personal/salidas-grupo',{personas:[{id:id1,revision:a.revision,salida:'2026-11-19T18:00:01Z'},{id:'ffffffff-ffff-4fff-8fff-ffffffffffff',revision:1,salida:'2026-11-19T18:00:01Z'}]});
+  assert.equal(invalida.status,404);
+  assert.equal((await obtener(`/personal/${id1}`)).body.registro.estado,'En instalaciones');
+  assert.equal((await obtener('/firmas/pendientes')).body.registros.some(x=>x.id===id1),false);
+  const cierre=await enviar('/personal/salidas-grupo',{personas:[{id:id1,revision:a.revision,salida:'2026-11-19T18:00:01Z'},{id:id2,revision:b.revision,salida:'2026-11-19T18:01:01Z'}]});
+  assert.equal(cierre.status,201,JSON.stringify(cierre.body));
+  assert.equal((await obtener(`/personal/${id1}`)).body.registro.estado,'Salida registrada');
+  assert.equal((await obtener(`/personal/${id2}`)).body.registro.estado,'Salida registrada');
+  assert.equal((await obtener('/personal/catalogo')).body.personas.some(x=>x.dni==='10000001'),true);
+  const inmediatoId=randomUUID(), claveInmediato=randomUUID(), personaId=randomUUID();
+  const inmediato={id:inmediatoId,fechaProgramada:'2026-11-19T19:00:00Z',motivo:'Visita imprevista',agenteId:100,personas:[{id:personaId,dni:'10000001',fecha:'2026-11-19T19:00:10Z'}]};
+  const registrado=await enviar('/personal/ingresos-inmediatos',inmediato,{clave:claveInmediato});
+  assert.equal(registrado.status,201,JSON.stringify(registrado.body));
+  assert.equal((await enviar('/personal/ingresos-inmediatos',inmediato,{clave:claveInmediato})).status,200);
+  assert.equal((await obtener('/personal/accesos')).body.accesos.some(x=>x.id===inmediatoId),false);
+  assert.equal((await obtener(`/personal/${personaId}`)).body.registro.fechaProgramada,undefined);
+  assert.equal((await obtener('/personal/catalogo')).body.personas.some(x=>x.dni==='10000001'),false);
+  const fallidoId=randomUUID();
+  assert.equal((await enviar('/personal/ingresos-inmediatos',{...inmediato,id:fallidoId,personas:[{...inmediato.personas[0],id:randomUUID()}]})).status,409);
+  assert.equal((await pool.query('SELECT count(*)::int AS total FROM transreport.personal_accesos WHERE id=$1',[fallidoId])).rows[0].total,0);
+});
+
+
+test('relevo nuevo sin observaciones conserva varios equipos y acepta el formato anterior', async () => {
+  const actual = { nombre:'AGENTE RELEVO', pendientesAnterior:'Sin pendientes', novedades:'', incidentes:'Sin incidentes', movimientos:'Visita de proveedor', equipos:'Radio de comunicaci\u00f3n\nLinterna', acciones:'Verificar ingreso' };
+  const creado = await enviar('/relevos',actual);
+  assert.equal(creado.status,201,JSON.stringify(creado.body));
+  assert.equal(creado.body.registro.equipos,actual.equipos);
+  assert.equal(creado.body.registro.observaciones,'');
+  const anterior = await enviar('/relevos',{...actual,observaciones:'Dato hist\u00f3rico'});
+  assert.equal(anterior.status,201);
+  assert.equal(anterior.body.registro.observaciones,'Dato hist\u00f3rico');
 });

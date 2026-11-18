@@ -1,14 +1,49 @@
 .selector-personalizado { position: relative; width: 100%; min-width: 0; }
 .selector-personalizado:focus-within { z-index: 30; }
 .selector-nativo { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; opacity: 0; inset: 0 auto auto 0; pointer-events: none; }
-.selector-boton { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; width: 100%; min-height: 48px; padding: 10px 14px; color: #152a43; background: #f9f9fc; border: 1px solid #e1e5ef; border-radius: 10px; font: inherit; }
-.selector-boton span:first-child { overflow-wrap: anywhere; }
+.selector-boton {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  text-align: left; width: 100%; min-height: 50px; padding: 8px 10px 8px 14px;
+  color: #152a43; background: #f9f9fc; border: 1px solid #e1e5ef;
+  border-radius: 12px; font: inherit; cursor: pointer;
+  transition: border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+.selector-boton > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.selector-boton:hover { border-color: #beb5ec; background: #fff; }
 .selector-boton:focus-visible { outline: 2px solid #7057ed; outline-offset: 2px; }
+.selector-boton[aria-expanded="true"] { border-color: #8f7bee; background: #fff; box-shadow: 0 0 0 3px #7057ed1a; }
 .selector-boton:disabled { opacity: .6; cursor: not-allowed; }
-.selector-flecha { flex: 0 0 auto; font-size: 18px; line-height: 1; }
-.selector-lista { position: absolute; z-index: 40; top: calc(100% + 4px); inset-inline: 0; max-height: 220px; overflow-y: auto; border: 1px solid #e1e5ef; border-radius: 10px; background: #fff; box-shadow: 0 8px 24px #1a244a24; padding: 4px; }
-.selector-lista button { display: block; width: 100%; border: 0; border-radius: 7px; padding: 10px; text-align: left; color: #152a43; background: transparent; font: inherit; white-space: normal; overflow-wrap: anywhere; }
-.selector-lista button:hover, .selector-lista button:focus-visible, .selector-lista button[aria-selected="true"] { background: #eef0ff; outline: none; }
+.selector-flecha {
+  display: grid; place-items: center; flex: 0 0 32px; width: 32px; height: 32px;
+  border-radius: 9px; background: #f0edff; color: #7057d8;
+  transition: background-color .18s ease, color .18s ease;
+}
+.selector-flecha svg { width: 18px; height: 18px; transition: transform .18s ease; }
+.selector-boton[aria-expanded="true"] .selector-flecha { background: #e8e3ff; color: #5940cf; }
+.selector-boton[aria-expanded="true"] .selector-flecha svg { transform: rotate(180deg); }
+.selector-lista {
+  position: absolute; z-index: 40; top: calc(100% + 6px); inset-inline: 0;
+  max-height: 220px; overflow-y: auto; overscroll-behavior: contain;
+  border: 1px solid #e8e5f3; border-radius: 12px; background: #fff;
+  box-shadow: 0 12px 30px #1a244a26; padding: 6px;
+}
+.selector-lista button {
+  position: relative; display: block; width: 100%; min-height: 42px;
+  border: 0; border-radius: 8px; padding: 10px 34px 10px 12px; text-align: left;
+  color: #263953; background: transparent; font: inherit; cursor: pointer;
+  white-space: normal; overflow-wrap: anywhere;
+}
+.selector-lista button:hover, .selector-lista button:focus-visible { background: #f6f4ff; outline: none; }
+.selector-lista button[aria-selected="true"] { background: #f0edff; color: #5740bd; font-weight: 600; }
+.selector-lista button[aria-selected="true"]::after {
+  content: ''; position: absolute; right: 15px; top: 50%; width: 9px; height: 5px;
+  border-left: 2px solid currentColor; border-bottom: 2px solid currentColor;
+  transform: translateY(-65%) rotate(-45deg);
+}
+.selector-lista button:disabled { opacity: .5; cursor: not-allowed; }
 body .seccion-formulario { overflow: visible; }
 .seccion-formulario:focus-within { position: relative; z-index: 20; }
 .seccion-formulario:has(.selector-lista) { position: relative; z-index: 20; }
+@media (prefers-reduced-motion: reduce) {
+  .selector-boton, .selector-flecha, .selector-flecha svg { transition: none; }
+}

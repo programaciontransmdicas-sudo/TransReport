@@ -50,7 +50,7 @@ export async function listarFilas(pool, tipo, params) {
         AND ($4::timestamptz IS NULL OR (creado_en,id)<($4::timestamptz,$5::uuid))
         AND ($7::timestamptz IS NULL OR creado_en>=$7) AND ($8::timestamptz IS NULL OR creado_en<$8)
         ${tipo !== "vehiculos" ? "AND tipo=$9" : ""}
-        ${tipo === "personal" ? "AND ($10::boolean IS NULL OR (NOT (datos ? 'firmaIngreso'))=$10)" : ""}
+        ${tipo === "personal" ? "AND ($10::boolean IS NULL OR ($10::boolean AND NOT (datos ? 'firmaIngreso') AND NOT (datos ? 'accesoId')) OR (NOT $10::boolean AND datos ? 'firmaIngreso'))" : ""}
         ORDER BY creado_en DESC,id DESC LIMIT $6`
         .replace("placa_placeholder", tipo === "vehiculos" ? "placa" : "''")
         .replace("placa_busqueda", tipo === "vehiculos" ? "placa" : "''"),

@@ -16,7 +16,7 @@ const campoRondaAnterior = z.string().trim().max(10000).optional();
 export const ronda = z
   .object({
     ...comun,
-    tipo: z.enum(["Programada", "Inopinada"]),
+    tipo: z.string().trim().min(1).max(120),
     turno: z.enum(["Día", "Noche"]),
     nombre: texto,
     fin: fecha,

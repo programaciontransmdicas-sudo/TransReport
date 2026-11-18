@@ -5,6 +5,12 @@ export function crearPersonalRoutes(deps) {
   const router = Router();
   const controller = crearPersonalController(deps);
   const carga = deps.carga;
+  router.get("/accesos", controller.listarAccesos);
+  router.get("/catalogo", controller.listarPersonalActivo);
+  router.post("/accesos", parametrosOperacion, carga([]), controller.crearAcceso);
+  router.post("/accesos/:id/ingresos", parametrosOperacion, carga([]), controller.ingresosGrupo);
+  router.post("/ingresos-inmediatos", parametrosOperacion, carga([]), controller.ingresosInmediatos);
+  router.post("/salidas-grupo", parametrosOperacion, carga([]), controller.salidasGrupo);
   router.get("/", controller.listar);
   router.get("/exportar.xlsx", controller.exportarExcel);
   router.get("/exportar.csv", controller.exportarCsv);

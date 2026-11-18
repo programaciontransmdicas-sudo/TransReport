@@ -4,7 +4,10 @@ import './buscadorCatalogo.css';
 
 // No bloquea la captura manual ni crea envíos pendientes si falla la consulta.
 export function BuscadorCatalogo({ tipo, onSeleccionar, onEditar, ...props }) {
+  const esPersona = tipo === 'personal' || tipo === 'agentes';
   const entrada = useRef(null);
+  const cierrePendiente = useRef(null);
+  useEffect(() => () => clearTimeout(cierrePendiente.current), []);
   const [consulta, setConsulta] = useState('');
   const [resultados, setResultados] = useState([]);
   const [estado, setEstado] = useState('');
@@ -26,7 +29,7 @@ export function BuscadorCatalogo({ tipo, onSeleccionar, onEditar, ...props }) {
     }, 300);
     return () => { activo = false; clearTimeout(timer); controller.abort(); };
   }, [tipo, consulta]);
-  return <div className="catalogo-buscador" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setAbierto(false); }}>
+  return <div className="catalogo-buscador" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) { clearTimeout(cierrePendiente.current); cierrePendiente.current = setTimeout(() => setAbierto(false), 400); } }} onFocus={() => clearTimeout(cierrePendiente.current)}>
     <div className="catalogo-caja">
       <svg className="catalogo-lupa" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><circle cx="10.5" cy="10.5" r="7"/><path d="m16 16 5 5"/></svg>
       <input {...props} className="catalogo-entrada" ref={entrada} autoComplete="off"
@@ -35,26 +38,27 @@ export function BuscadorCatalogo({ tipo, onSeleccionar, onEditar, ...props }) {
         onChange={event => { onEditar?.(event.target.value); setConsulta(event.target.value); setResultados([]); setEstado(''); setAbierto(true); }} />
       {abierto && consulta.trim().length >= 2 && estado && <div className="catalogo-resultados" aria-live="polite">
         {estado === 'cargando' && <p>Buscando coincidencias…</p>}
-        {estado === 'error' && <p>No se pudo buscar. Puede escribir manualmente.</p>}
-        {estado === 'listo' && resultados.length === 0 && <p>Sin coincidencias. Puede escribir manualmente.</p>}
+        {estado === 'error' && <p>{tipo === 'agentes' ? 'No se pudo consultar a los agentes. Reintente cuando haya conexión.' : 'No se pudo buscar. Puede escribir manualmente.'}</p>}
+        {estado === 'listo' && resultados.length === 0 && <p>{tipo === 'agentes' ? 'No se encontraron agentes activos.' : 'Sin coincidencias. Puede escribir manualmente.'}</p>}
         {estado === 'listo' && resultados.length > 0 && <>
-          <div className="catalogo-encabezado">{tipo === 'personal' ? 'PERSONAL ENCONTRADO' : tipo === 'operaciones' ? 'CLIENTES Y OPERACIONES' : 'UNIDADES ENCONTRADAS'}</div>
+          <div className="catalogo-encabezado">{tipo === 'agentes' ? 'AGENTES DE SEGURIDAD PATRIMONIAL' : tipo === 'personal' ? 'PERSONAL ENCONTRADO' : tipo === 'operaciones' ? 'CLIENTES Y OPERACIONES' : 'UNIDADES ENCONTRADAS'}</div>
           <ul>{resultados.map(item => <li key={tipo === 'vehiculos' ? item.placa : item.id}>
             <button type="button" onClick={() => {
-              const valor = tipo === 'personal' ? (props.name === 'dni' ? item.dni || '' : item.nombre_completo) : tipo === 'operaciones' ? `${item.cliente} - ${item.operacion}` : item.placa;
+              const valor = esPersona ? (props.name === 'dni' ? item.dni || '' : item.nombre_completo) : tipo === 'operaciones' ? `${item.cliente} - ${item.operacion}` : item.placa;
+              clearTimeout(cierrePendiente.current);
               if (entrada.current) entrada.current.value = valor;
               onSeleccionar?.(item); setConsulta(''); setResultados([]); setAbierto(false);
             }}>
-              <span className="catalogo-icono" aria-hidden="true">{tipo === 'personal' ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg> : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M3 6h11v11H3zM14 10h4l3 4v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>}</span>
-              <span className="catalogo-contenido"><strong>{tipo === 'personal' ? item.nombre_completo : tipo === 'operaciones' ? `${item.cliente} - ${item.operacion}` : item.placa}</strong>
-                {tipo === 'personal' && <span>DNI: {item.dni || 'No registrado'}{item.cargo ? ` · ${item.cargo}` : ''}</span>}
+              <span className="catalogo-icono" aria-hidden="true">{esPersona ? <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="8" r="3.5"/><path d="M5 20v-1a7 7 0 0 1 14 0v1"/></svg> : <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M3 6h11v11H3zM14 10h4l3 4v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg>}</span>
+              <span className="catalogo-contenido"><strong>{esPersona ? item.nombre_completo : tipo === 'operaciones' ? `${item.cliente} - ${item.operacion}` : item.placa}</strong>
+                {esPersona && <span>DNI: {item.dni || 'No registrado'}{item.cargo ? ` · ${item.cargo}` : ''}</span>}
               </span>
             </button>
           </li>)}</ul>
         </>}
       </div>}
     </div>
-    <small>{tipo === 'personal' ? 'Busca por nombre o DNI, o escribe manualmente.' : tipo === 'operaciones' ? 'Busca un cliente u operación, o escribe manualmente.' : 'Busca la placa o escríbela manualmente.'}</small>
+    <small>{tipo === 'agentes' ? 'Busca por nombre o DNI y selecciona al agente.' : tipo === 'personal' ? 'Busca por nombre o DNI, o escribe manualmente.' : tipo === 'operaciones' ? 'Busca un cliente u operación, o escribe manualmente.' : 'Busca la placa o escríbela manualmente.'}</small>
   </div>;
 }
 

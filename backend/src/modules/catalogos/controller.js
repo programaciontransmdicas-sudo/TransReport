@@ -6,14 +6,16 @@ export function crearCatalogosController({ repositorioCatalogos, logger }) {
     async buscar(req, res) {
       const tipo = req.params.tipo;
       const texto = req.query.q;
-      if (!['personal', 'vehiculos', 'operaciones'].includes(tipo) || typeof texto !== 'string') {
+      if (!['personal', 'agentes', 'vehiculos', 'operaciones'].includes(tipo) || typeof texto !== 'string') {
         return res.status(400).json({ mensaje: 'Búsqueda no válida.' });
       }
       const consulta = texto.trim();
       if (consulta.length < 2 || (tipo === 'vehiculos' && consulta.replace(/[\s-]/g, '').length < 2)) return res.json([]);
       if (consulta.length > 80) return res.status(400).json({ mensaje: 'La búsqueda admite hasta 80 caracteres.' });
       try {
-        const filas = tipo === 'personal'
+        const filas = tipo === 'agentes'
+          ? await repositorioCatalogos.buscarAgentes(consulta)
+          : tipo === 'personal'
           ? await repositorioCatalogos.buscarPersonas(consulta)
           : tipo === 'operaciones'
             ? await repositorioCatalogos.buscarOperaciones(consulta)

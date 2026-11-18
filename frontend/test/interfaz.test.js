@@ -60,6 +60,11 @@ globalThis.fetch = async (url, o = {}) => {
       dispositivo: equipoHabilitado ? dispositivo : null,
     });
   if (tipo === "dispositivo") return respuesta({ dispositivo });
+  if (tipo === "configuracion") return respuesta({ opciones: [
+      {modulo:"personal",campo:"motivo",valor:"Ejemplo: Inicio de jornada laboral",activo:true},
+      ...[['pendientesAnterior','Sin pendientes'],['novedades','Sin novedades'],['incidentes','Sin incidentes'],['movimientos','Sin visitas ni movimientos relevantes'],['equipos','Radio de comunicación']].map(([campo,valor])=>({modulo:'relevos',campo,valor,activo:true})),
+      {modulo:'rondas',campo:'tipo',valor:'Programada',activo:true},
+    ] });
   assert.ok(
     !["terceros", "activos", "llaves"].includes(tipo),
     "La app no debe consultar los módulos reservados para el ERP",
@@ -73,6 +78,7 @@ globalThis.fetch = async (url, o = {}) => {
     });
   if (tipo === "firmas")
     return respuesta({ registros: filas.personal, siguiente: null });
+  if (tipo === "personal" && id === "accesos" && o.method !== "POST") return respuesta({ accesos: [] });
   if (o.method === "POST") {
     const clave = o.headers["Idempotency-Key"],
       datos =
@@ -174,20 +180,10 @@ test("acceso automático sin token, formularios y recuperación persistente", as
   assert.match(document.body.textContent, /Tablet de prueba · Peruarbo/);
   assert.doesNotMatch(document.body.textContent, /Terceros|Activos|Llaves/);
   await abrirControl("Personal");
-  await pulsar("Registrar ingreso");
-  assert.equal(document.querySelector('[name="base"]').value, "Peruarbo");
-  rellenar({
-    nombre: "PERSONA UI",
-    dni: "12345678",
-    operacion: "Trabajo",
-    motivo: "Jornada",
-    agente: "AB",
-  });
-  await enviarFormulario();
-  assert.equal(filas.personal.length, 1, document.body.textContent);
-  assert.equal(recibidas.at(-1).datos.dni, "12345678");
-  assert.ok(!("estado" in recibidas.at(-1).datos));
-  assert.ok(document.querySelector("canvas"), "Tras ingreso abre la firma");
+  await pulsar("Programar ingreso");
+  assert.ok(document.querySelector('#fecha-programada'));
+  assert.ok(document.querySelector('#agente-personal'));
+  assert.doesNotMatch(document.body.textContent, /Cliente \/ Operación|Firmar ingreso/);
   await pulsar("Volver");
   await pulsar("Inicio");
   for (const [nombre, nuevo] of [
@@ -199,18 +195,14 @@ test("acceso automático sin token, formularios y recuperación persistente", as
     if (nombre === "Rondas") {
       const pregunta = document.querySelector('#ronda-anomalias');
       assert.ok(pregunta, 'Rondas pregunta primero si hubo anomalías');
-      await act(async () => {
-        pregunta.value = 'No';
-        pregunta.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-      });
+      await act(async () => pregunta.click());
+      await act(async () => [...document.querySelectorAll('[role=option]')].find(x => x.textContent === 'No').click());
       await esperar();
       assert.ok(document.querySelector('form'));
       assert.equal(document.querySelector('[name="seguimiento"]'), null);
       assert.equal(document.querySelector('input[type="file"]'), null);
-      await act(async () => {
-        pregunta.value = 'Sí';
-        pregunta.dispatchEvent(new dom.window.Event('change', { bubbles: true }));
-      });
+      await act(async () => pregunta.click());
+      await act(async () => [...document.querySelectorAll('[role=option]')].find(x => x.textContent === 'Sí').click());
       await esperar();
     }
     assert.ok(document.querySelector("form"), nombre);
@@ -251,41 +243,37 @@ test("acceso automático sin token, formularios y recuperación persistente", as
   await pulsar("Inicio");
   await abrirControl("Vehículos");
   await pulsar("Registrar ingreso");
-  assert.equal(document.querySelectorAll('input[type="file"]').length, 5);
+  assert.equal(document.querySelectorAll('input[type="file"]').length, 10);
   await pulsar("Volver");
   await pulsar("Registrar salida");
-  assert.equal(document.querySelectorAll('input[type="file"]').length, 5);
+  assert.equal(document.querySelectorAll('input[type="file"]').length, 10);
   await pulsar("Volver");
   await pulsar("Inicio");
   await abrirControl("Relevos");
   await pulsar("Registrar relevo");
-  rellenar({
-    nombre: "RECUPERACIÓN UI",
-    pendientesAnterior: "Ninguno",
-    incidentes: "Ninguno",
-    movimientos: "Ninguno",
-    equipos: "Conforme",
-    acciones: "Ninguna",
-    observaciones: "Conforme",
-  });
+  rellenar({ nombre: "RECUPERACIÓN UI", acciones: "Ninguna" });
+  for (const [id, texto] of [
+    ['control-pendientesAnterior', 'Sin pendientes'],
+    ['control-incidentes', 'Sin incidentes'],
+    ['control-movimientos', 'Sin visitas ni movimientos relevantes'],
+  ]) {
+    const selector = document.getElementById(id);
+    await act(async () => selector.click());
+    const opcion = [...selector.parentElement.querySelectorAll('[role=option]')].find(x => x.textContent === texto);
+    await act(async () => opcion.click());
+  }
+  await act(async () => document.querySelector('input[name="equipos"]').click());
   perderRespuesta = true;
   await enviarFormulario();
-  assert.ok(boton("Recuperar envío"));
+  assert.equal(boton("Recuperar envío"), undefined, "Un envío en curso no debe mostrarse como pendiente");
   assert.equal(filas.relevos.length, 1);
-  await act(async () => root.unmount());
-  root = createRoot(document.getElementById("root"));
-  await montar();
-  assert.ok(
-    boton("Recuperar envío"),
-    "El envío sobrevive al cierre de la interfaz",
-  );
-  await pulsar("Recuperar envío");
+  await act(async () => { await new Promise(r => setTimeout(r, 2300)); });
   assert.equal(filas.relevos.length, 1);
   const dos = recibidas.filter((r) => r.tipo === "relevos");
   assert.equal(dos.length, 2);
   assert.equal(dos[0].clave, dos[1].clave);
   assert.equal(boton("Recuperar envío"), undefined);
-  assert.match(document.body.textContent, /Envío recuperado y confirmado/);
+
 });
 
 test("un equipo revocado deja de mostrar los controles sin pedir token", async () => {

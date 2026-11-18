@@ -8,6 +8,16 @@ export function crearCatalogosRepository(pool) {
             OR position($1 in coalesce(p.dni::text,'')) > 0)
         ORDER BY p.nombre_completo, p.id LIMIT 10`, [texto])).rows;
     },
+    async buscarAgentes(texto) {
+      return (await pool.query(`SELECT p.id, p.nombre_completo, p.dni, p.cargo
+        FROM public.personal p
+        WHERE lower(btrim(p.estado)) = 'activo'
+          AND upper(btrim(p.area)) = 'SEGURIDAD PATRIMONIAL'
+          AND upper(btrim(p.cargo)) = 'AGENTE DE SEGURIDAD PATRIMONIAL'
+          AND (position(lower($1) in lower(coalesce(p.nombre_completo,''))) > 0
+            OR position($1 in coalesce(p.dni::text,'')) > 0)
+        ORDER BY p.nombre_completo, p.id LIMIT 10`, [texto])).rows;
+    },
     async buscarOperaciones(texto) {
       return (await pool.query(`SELECT co.id, c.nombre AS cliente, co.nombre AS operacion
         FROM public.cliente_operaciones co JOIN public.clientes c ON c.id = co.cliente_id

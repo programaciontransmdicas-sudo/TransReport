@@ -1,3 +1,4 @@
+import { useCatalogos } from "../configuracion/catalogo.js";
 import Selector from "../../components/comunes/Selector.jsx";
 import { useState } from "react";
 import useRegistrosApi from "../../hooks/useRegistrosApi.js";
@@ -15,6 +16,7 @@ const datosRonda = rondas.filter((c) =>
 );
 const rondaConAnomalias = rondas.filter((c) => c.nombre !== "presentaAnomalias");
 function FormularioRonda({ control }) {
+  const catalogos = useCatalogos();
   const [archivos, setArchivos] = useState([]);
   const [respuesta, setRespuesta] = useState("");
   const conAnomalias = respuesta === "Sí";
@@ -38,6 +40,8 @@ function FormularioRonda({ control }) {
       estado: "Registrada",
     });
   }
+  if (catalogos.cargando) return <p>Cargando listas…</p>;
+  if (catalogos.error) return <p className="mensaje-error" role="alert">{catalogos.error} <button type="button" onClick={catalogos.cargar}>Reintentar</button> <button type="button" onClick={control.volver}>Volver</button></p>;
   return (
     <>
       <section className="seccion-formulario">
@@ -64,6 +68,7 @@ function FormularioRonda({ control }) {
       {respuesta ? (
         <FormularioControl
           campos={conAnomalias ? rondaConAnomalias : datosRonda}
+          opcionesPorCampo={{tipo:catalogos.opciones("rondas", "tipo")}}
           onGuardar={guardar}
           onVolver={control.volver}
           ocupado={control.ocupado}

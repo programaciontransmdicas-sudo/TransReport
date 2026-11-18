@@ -29,6 +29,8 @@ import { crearRondasRoutes } from "./modules/rondas/routes.js";
 import { crearTercerosRoutes } from "./modules/terceros/routes.js";
 import { crearActivosRoutes } from "./modules/activos/routes.js";
 
+import { crearConfiguracionRoutes } from "./modules/configuracion/routes.js";
+
 export function crearApp({
   pool,
   almacen,
@@ -127,6 +129,7 @@ const auth = autenticarDispositivo(pool, {
       repositorioCatalogos: crearCatalogosRepository(pool),
     }),
   );
+  app.use("/api/configuracion", crearConfiguracionRoutes(deps));
   app.use("/api/archivos", crearArchivosRoutes(deps));
   app.use("/api/resumen", crearResumenRoutes(deps));
   app.use("/api/firmas", crearFirmasRoutes(deps));
