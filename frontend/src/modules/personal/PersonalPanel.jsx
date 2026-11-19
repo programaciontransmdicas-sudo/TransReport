@@ -13,6 +13,8 @@ import { fechaLegible } from '../../utils/fechas.js';
 import './personal-grupos.css';
 
 const sinTildes = texto => String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+const SIN_DATO = '__sin_dato__';
+const valorFiltro = v => String(v ?? '').trim();
 const hora = valor => { if (!valor) return 'Sin hora'; const iso = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(valor) ? `${valor}:00-05:00` : valor; return new Intl.DateTimeFormat('es-PE',{timeZone:'America/Lima',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(iso)); };
 
 export default function PersonalPanel({ onBloqueo, solicitud }) {
@@ -21,17 +23,29 @@ export default function PersonalPanel({ onBloqueo, solicitud }) {
   const c = useRegistrosApi('personal',onBloqueo,solicitud);
   const [accesos,setAccesos]=useState([]), [catalogo,setCatalogo]=useState([]), [abiertos,setAbiertos]=useState([]);
   const [acceso,setAcceso]=useState(null), [busqueda,setBusqueda]=useState(''), [seleccion,setSeleccion]=useState({});
+  const [filtros,setFiltros]=useState({modalidad:'',cliente:'',operacion:'',area:''});
+  const [avisoFiltros,setAvisoFiltros]=useState('');
   const [cargando,setCargando]=useState(false), [error,setError]=useState(''), [mensaje,setMensaje]=useState('');
   const [motivo,setMotivo]=useState(''), [programada,setProgramada]=useState(fechaLocal()), [modo,setModo]=useState('inmediato');
   const agente=useRef(null), agenteIngreso=useRef(null), enCurso=useRef(false), idAcceso=useRef(nuevoId());
   const base=leerConfiguracion()?.dispositivo?.base || '';
   const lista = c.vista==='cierre' ? abiertos : catalogo;
-  const filtrados=useMemo(()=>lista.filter(p=>!seleccion[String(p.id)] && sinTildes(`${p.nombre_completo || p.nombre} ${p.dni}`).includes(sinTildes(busqueda))),[lista,busqueda,seleccion]);
+  const opcionesFiltro = useMemo(() => {
+    const opciones = campo => {
+      const valores = new Map();
+      const origen = campo === 'operacion' && filtros.cliente ? lista.filter(p => filtros.cliente === SIN_DATO ? !valorFiltro(p.cliente) : sinTildes(valorFiltro(p.cliente)) === sinTildes(filtros.cliente)) : lista;
+      origen.forEach(p => { const v=valorFiltro(p[campo]); if (v && !valores.has(sinTildes(v))) valores.set(sinTildes(v),v); });
+      return {valores:[...valores.values()].sort((a,b)=>a.localeCompare(b,'es',{sensitivity:'base'})), sinDato:origen.some(p=>!valorFiltro(p[campo]))};
+    };
+    return Object.fromEntries(['modalidad','cliente','operacion','area'].map(c=>[c,opciones(c)]));
+  }, [lista, filtros.cliente]);
+  const filtrados=useMemo(()=>lista.filter(p=>!seleccion[String(p.id)] && sinTildes(`${p.nombre_completo || p.nombre} ${p.dni}`).includes(sinTildes(busqueda)) && Object.entries(filtros).every(([campo,valor])=>!valor || (valor===SIN_DATO ? !valorFiltro(p[campo]) : sinTildes(valorFiltro(p[campo]))===sinTildes(valor)))),[lista,busqueda,seleccion,filtros]);
   const marcados=Object.values(seleccion);
   useEffect(()=>{ if(c.vista==='lista') cargarAccesos(); },[c.vista]);
   useEffect(()=>{ if(c.vista==='nuevo') catalogos.cargar(); },[c.vista, catalogos.cargar]);
   async function cargarAccesos() { try { const datos=await api.obtener('/api/personal/accesos'); setAccesos(Array.isArray(datos.accesos) ? datos.accesos : []); setError(''); } catch(e) {setError(e.message)} }
-  function volver() { setSeleccion({}); setBusqueda(''); setError(''); setAcceso(null); c.volver(); }
+  function limpiarFiltros() { setFiltros({modalidad:'',cliente:'',operacion:'',area:''}); }
+  function volver() { limpiarFiltros(); setAvisoFiltros(''); setSeleccion({}); setBusqueda(''); setError(''); setAcceso(null); c.volver(); }
   async function crearAcceso(e) {
     e.preventDefault(); if(enCurso.current) return;
     if(!agente.current) {setError('Seleccione un agente de Seguridad Patrimonial.'); return;}
@@ -46,12 +60,16 @@ export default function PersonalPanel({ onBloqueo, solicitud }) {
   }
   async function abrirIngresos(a) {
     setError('');setCargando(true);
-    try { const datos=await api.obtener('/api/personal/catalogo'); setCatalogo(Array.isArray(datos.personas) ? datos.personas : []); agenteIngreso.current={id:a.agenteId,nombre_completo:a.agente}; setAcceso(a);setSeleccion({});setBusqueda('');c.setVista('ingresos'); }
+    try { const datos=await api.obtener('/api/personal/catalogo'); setCatalogo(Array.isArray(datos.personas) ? datos.personas : []); agenteIngreso.current={id:a.agenteId,nombre_completo:a.agente}; setAcceso(a);setSeleccion({});setBusqueda('');limpiarFiltros();setAvisoFiltros('');c.setVista('ingresos'); }
     catch(e){setError(e.message)} finally{setCargando(false)}
   }
   async function abrirSalidas() {
     setError('');setCargando(true);
-    try { let cursor,filas=[]; do {const pagina=await listarRegistros('personal',{estado:'En instalaciones'},cursor);filas.push(...pagina.registros);cursor=pagina.siguiente;} while(cursor);setAbiertos(filas);setSeleccion({});setBusqueda('');c.setVista('cierre'); }
+    try { let cursor,filas=[]; do {const pagina=await listarRegistros('personal',{estado:'En instalaciones'},cursor);filas.push(...pagina.registros);cursor=pagina.siguiente;} while(cursor);
+      let porDni=new Map(); setAvisoFiltros('');
+      try { const datos=await api.obtener('/api/personal/catalogo?incluirDentro=1'); porDni=new Map((Array.isArray(datos.personas)?datos.personas:[]).map(p=>[String(p.dni),p])); }
+      catch { setAvisoFiltros('No se pudieron cargar los datos para filtrar. Puedes registrar las salidas igualmente.'); }
+      setAbiertos(filas.map(p=>{const maestro=porDni.get(String(p.dni)); return {...p,modalidad:maestro?.modalidad ?? '',cliente:maestro?.cliente ?? '',operacion:maestro?.operacion ?? '',area:maestro?.area ?? ''};}));setSeleccion({});setBusqueda('');limpiarFiltros();c.setVista('cierre'); }
     catch(e){setError(e.message)} finally{setCargando(false)}
   }
   function marcar(p) {
@@ -111,11 +129,21 @@ export default function PersonalPanel({ onBloqueo, solicitud }) {
           <input id="buscar-personal-grupo" type="search" placeholder="Escribe un nombre o DNI" value={busqueda} onChange={e=>setBusqueda(e.target.value)} />
         </div>
       </div>
+      <section className="personal-filtros" aria-label="Filtros de personal">
+        <div className="personal-filtros-cabecera"><strong>Filtros</strong><button type="button" disabled={cargando} onClick={limpiarFiltros}>Limpiar filtros</button></div>
+        <div className="personal-filtros-grilla">{[['modalidad','Modalidad'],['cliente','Cliente'],['operacion','Operación'],['area','Área']].map(([campo,etiqueta])=><div className="campo" key={campo}>
+          <label id={`etiqueta-filtro-personal-${campo}`} htmlFor={`filtro-personal-${campo}`}>{etiqueta}</label>
+          <Selector id={`filtro-personal-${campo}`} value={filtros[campo]} disabled={cargando} onChange={e=>setFiltros(prev=>({...prev,[campo]:e.target.value,...(campo==='cliente'?{operacion:''}:{})}))}>
+            <option value="">Todas</option>{opcionesFiltro[campo].valores.map(valor=><option key={valor} value={valor}>{valor}</option>)}{opcionesFiltro[campo].sinDato && <option value={SIN_DATO}>Sin información</option>}
+          </Selector>
+        </div>)}</div>
+        {avisoFiltros && <p role="status">{avisoFiltros}</p>}
+      </section>
       <div className="personal-resumen"><strong>Personal {c.vista==='ingresos'?'disponible':'en instalaciones'}</strong><span className="personal-contador" role="status">{marcados.length} seleccionada(s)</span></div>
       <div className="personal-lista">{filtrados.map(p=><article className="personal-fila" key={p.id}>
         <label><input type="checkbox" checked={false} disabled={cargando} onChange={()=>marcar(p)} /><span><strong>{p.nombre_completo || p.nombre}</strong><small>DNI: {p.dni}</small></span></label>
       </article>)}</div>
-      {!filtrados.length && <p>{busqueda ? 'No se encontraron personas disponibles para esta búsqueda.' : 'No hay más personas disponibles.'}</p>}
+      {!filtrados.length && <p>{busqueda || Object.values(filtros).some(Boolean) ? 'No se encontraron personas con estos filtros.' : 'No hay más personas disponibles.'}</p>}
       <section className="personal-seleccion" aria-labelledby="personal-seleccion-titulo">
         <div className="personal-seleccion-cabecera"><div><h4 id="personal-seleccion-titulo">Personas seleccionadas</h4><small>{c.vista==='ingresos' ? 'Ingresos por guardar' : 'Salidas por guardar'}</small></div><span className="personal-contador" aria-live="polite">{marcados.length}</span></div>
         {marcados.length ? <div className="personal-seleccion-lista">{marcados.map(p=><article className="personal-seleccion-fila" key={p.id}>

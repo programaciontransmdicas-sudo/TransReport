@@ -65,3 +65,14 @@
 .personal-seleccion-quitar { min-width:36px; min-height:36px; padding:0; line-height:1; font-size:1.1rem; }
 @media (max-width:480px) { .personal-seleccion-lista { grid-template-columns:repeat(2, minmax(0, 1fr)); max-height:23vh; } }
 @media (max-width:350px) { .personal-seleccion-lista { grid-template-columns:minmax(0, 1fr); } }
+
+.personal-filtros { margin:0 0 16px; padding:13px; border:1px solid #e5e1f1; border-radius:13px; background:#fff; }
+.personal-filtros-cabecera { display:flex; justify-content:space-between; gap:8px; align-items:center; margin-bottom:10px; color:#283353; font-size:.85rem; }
+.personal-filtros-cabecera button { min-height:38px; padding:6px 10px; border:0; background:transparent; border-radius:8px; color:#6551ad; font-weight:700; cursor:pointer; }
+.personal-filtros-cabecera button:focus-visible { outline:3px solid #ab9bfa; }
+.personal-filtros-grilla { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; }
+.personal-filtros-grilla .campo { display:grid; gap:5px; min-width:0; }
+.personal-filtros-grilla .selector-boton { min-height:44px; width:100%; }
+.personal-filtros > p { color:#855c25; font-size:.8rem; }
+@media(max-width:900px) { .personal-filtros-grilla { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:360px) { .personal-filtros-grilla { grid-template-columns:minmax(0,1fr); } }

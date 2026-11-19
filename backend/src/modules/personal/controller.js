@@ -12,7 +12,25 @@ export function crearPersonalController(deps) {
   return {
     ...crearRegistrosController(deps, "personal"),
     listarAccesos: async (req, res) => res.json({ accesos: (await deps.pool.query("SELECT id,base,fecha_programada AS \"fechaProgramada\",motivo,agente,agente_id AS \"agenteId\",creado_en AS \"creadoEn\" FROM transreport.personal_accesos WHERE base=$1 AND programado=true ORDER BY fecha_programada DESC", [req.dispositivo.base])).rows }),
-    listarPersonalActivo: async (_req, res) => res.json({ personas: (await deps.pool.query("SELECT p.id,p.nombre_completo,p.dni FROM public.personal p WHERE lower(btrim(p.estado))='activo' AND p.dni::text ~ '^[0-9]{8}$' AND NOT EXISTS (SELECT 1 FROM transreport.registros r WHERE r.tipo='personal' AND r.datos->>'dni'=p.dni::text AND r.datos->>'estado'='En instalaciones') ORDER BY p.nombre_completo,p.id")).rows }),
+    listarPersonalActivo: async (req, res) => {
+      const incluirDentro = req.query.incluirDentro === '1';
+      const { rows } = await deps.pool.query(`
+        SELECT p.id, p.nombre_completo, p.dni,
+          to_jsonb(p)->>'modalidad' AS modalidad, to_jsonb(p)->>'area' AS area,
+          to_jsonb(p)->>'cargo' AS cargo,
+          COALESCE(NULLIF(trim(c.nombre), ''), NULLIF(trim(to_jsonb(p)->>'cliente'), '')) AS cliente,
+          COALESCE(NULLIF(trim(co.nombre), ''), NULLIF(trim(to_jsonb(p)->>'operacion'), '')) AS operacion
+        FROM public.personal p
+        LEFT JOIN public.cliente_operaciones co ON co.id::text = to_jsonb(p)->>'cliente_operacion_id'
+        LEFT JOIN public.clientes c ON c.id = co.cliente_id
+        WHERE lower(btrim(p.estado))='activo' AND p.dni::text ~ '^[0-9]{8}$'
+          AND ($1::boolean OR NOT EXISTS (
+            SELECT 1 FROM transreport.registros r WHERE r.tipo='personal'
+              AND r.datos->>'dni'=p.dni::text AND r.datos->>'estado'='En instalaciones'
+          ))
+        ORDER BY p.nombre_completo,p.id`, [incluirDentro]);
+      res.json({personas:rows});
+    },
     crearAcceso: crearOperacionController({ ejecutar, tipo:'personal', accion:'crear_acceso', schema:esquemaAcceso, operar:grupos.crearAcceso }),
     ingresosInmediatos: crearOperacionController({ ejecutar, tipo:'personal', accion:'ingresos_inmediatos', schema:esquemaInmediato, operar: async (c,d,f,dev,intentadas) => {
       await grupos.crearAcceso(c, {...d, programado:false}, f, dev);
